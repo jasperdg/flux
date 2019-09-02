@@ -115,10 +115,6 @@ mod tests {
 		testing_env!(context, config);
 		let mut contract = BinaryMarket::default();
 
-		let account_1_id = String::from("alice");
-		let account_2_id = String::from("bob");
-		ENV.as_mock().set_originator_id(account_1_id.as_bytes().to_vec());
-
 		// Testing binary tree
 		let order_1 = contract.place_order(0, 100, 50);
 		let order_2 = contract.place_order(0, 100, 50);
