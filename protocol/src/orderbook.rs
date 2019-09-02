@@ -5,11 +5,11 @@ use std::collections::btree_map::Entry;
 use std::panic;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use near_bindgen::{near_bindgen, Environment};
+use near_bindgen::{near_bindgen, env};
 use crate::order::Order;
 
 #[near_bindgen]
-#[derive(Deserialize, Serialize, BorshDeserialize, BorshSerialize, Debug)]
+#[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Orderbook {
 	pub root: Option<Order>,
 	pub orders: BTreeMap<Vec<u8>, Order>,
@@ -20,13 +20,13 @@ pub struct Orderbook {
 #[near_bindgen]
 impl Orderbook {
 	// TODO: Only return order_id
-	pub fn add_new_order(&mut self, env: &mut Environment, amount: u64, price: u64) -> Order {
+	pub fn add_new_order(&mut self, amount: u64, price: u64) -> Order {
 		let order_id = self.to_order_id();
 		let outcome = self.outcome_id;
 		let mut prev_id: Option<Vec<u8>> = None;
 		let mut better_order_id: Option<Vec<u8>> = None;
 		let mut worse_order_id: Option<Vec<u8>> = None;
-		let order = &mut Order::new(env.signer_account_id(), self.outcome_id, order_id.to_vec(), amount, price, prev_id, better_order_id, worse_order_id);
+		let order = &mut Order::new(env::signer_account_pk(), self.outcome_id, order_id.to_vec(), amount, price, prev_id, better_order_id, worse_order_id);
 		return self.add_order(order);
 	}
 
@@ -114,12 +114,12 @@ impl Orderbook {
 		}
 	}
 
-	fn to_order_id(&mut self, env: &mut Environment) -> Vec<u8> {
+	fn to_order_id(&mut self) -> Vec<u8> {
 		let mut outcome = vec![];
 		outcome.write_u64::<BigEndian>(self.outcome_id).unwrap();
 		let mut nonce = vec![];
 		nonce.write_u64::<BigEndian>(self.nonce).unwrap();
-		let order_id = [outcome, nonce, env.signer_account_id()].concat();
+		let order_id = [outcome, nonce, env::signer_account_pk()].concat();
 		self.nonce += 1;
 		return order_id;
 	}
@@ -136,6 +136,4 @@ impl Orderbook {
 			outcome_id: outcome,
 		}
 	}
-
-
 }

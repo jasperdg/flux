@@ -1,8 +1,9 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use std::clone::Clone;
 use std::time::SystemTime;
+use serde::{Deserialize, Serialize};
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug, Clone)]
 pub struct Order {
 	pub id: Vec<u8>,
 	pub owner: Vec<u8>,

@@ -1,10 +1,11 @@
 use std::string::String;
 use std::collections::HashMap;
-use near_bindgen::{near_bindgen, Environment};
+use near_bindgen::{near_bindgen, env};
 use borsh::{BorshDeserialize, BorshSerialize};
+use serde::{Deserialize, Serialize};
 
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct FungibleToken {
      balances: HashMap<Vec<u8>, u64>,
      allowances: HashMap<Vec<u8>, u64>,
@@ -16,16 +17,16 @@ pub struct FungibleToken {
 #[near_bindgen]
 impl FungibleToken {
 
-     pub fn set_allowance(&mut self, env: &mut Environment ,spender: &String, allowance: u64) -> bool {
-          let from_id = env.signer_account_id();
+     pub fn set_allowance(&mut self, spender: &String, allowance: u64) -> bool {
+          let from_id = env::signer_account_pk();
           let spender_id = spender.to_string().into_bytes().to_vec();
           let flat_id = [from_id, spender_id].concat();
           self.allowances.insert(flat_id, allowance);
           return true;
      }
 
-     pub fn transfer(&mut self, env: &mut Environment, to: &String, amount: u64) -> bool {
-          let from_id = env.signer_account_id();
+     pub fn transfer(&mut self, to: &String, amount: u64) -> bool {
+          let from_id = env::signer_account_pk();
           let to_id= to.to_string().into_bytes().to_vec();
           let from_balance = self.balances.get(&from_id).unwrap_or(&0);
           let to_balance= self.balances.get(&to_id).unwrap_or(&0);
@@ -40,9 +41,9 @@ impl FungibleToken {
           return true;
      }
 
-     pub fn transfer_from(&mut self, env: &mut Environment,from: &String, to: &String, amount: u64) -> bool {
+     pub fn transfer_from(&mut self, from: &String, to: &String, amount: u64) -> bool {
           let from_id = from.to_string().into_bytes().to_vec();
-          let spender_id = env.signer_account_id();
+          let spender_id = env::signer_account_pk();
           let to_id = to.to_string().into_bytes().to_vec();
           let flat_id = [from_id.to_vec(), spender_id].concat();
           let from_balance = self.get_balance_of(from);
@@ -80,14 +81,14 @@ impl FungibleToken {
 
 
 impl Default for FungibleToken {
-    fn default(env: &mut Environment) -> Self {
+    fn default() -> Self {
           let mut balances = HashMap::new();
           let max_supply = 1000000000;
-          // balances.insert(Environment.signer_account_id(), max_supply);
+          balances.insert(env::signer_account_pk(), max_supply);
           Self { 
                balances: balances,
                allowances: HashMap::new(),
-               creator: env.signer_account_id(),
+               creator: env::signer_account_pk(),
                name: String::from("FungToken"),
                max_supply: max_supply,
           }

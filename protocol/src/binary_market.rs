@@ -3,18 +3,20 @@ use std::clone::Clone;
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 use std::time::SystemTime;
-use near_bindgen::{near_bindgen, Environment};
+use near_bindgen::{near_bindgen, env};
+use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
 use crate::fungible_token::FungibleToken;
 use crate::order::Order;
 use crate::orderbook::Orderbook;
 
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct BinaryMarket {
 	pub orderbooks: BTreeMap<u64, Orderbook>,
 	pub order_ids_by_account_id: BTreeMap<Vec<u8>, Vec<Vec<u8>>>,
 	pub orders: BTreeMap<Vec<u8>, Order>,
+	pub creator: Vec<u8>,
 	pub outcomes: u64,
 	pub	outcome_tokens: Vec<FungibleToken>,
 	pub description: String,
@@ -60,6 +62,7 @@ impl Default for BinaryMarket {
 			orderbooks: BTreeMap::new(),
 			order_ids_by_account_id:  BTreeMap::new(),
 			orders: BTreeMap::new(),
+			creator: env::signer_account_pk(),
 			outcomes,
 			outcome_tokens: initialize_outcome_tokens(outcomes),
 			description: String::from("Will x happen by T?"),
@@ -109,60 +112,60 @@ mod tests {
 	fn test_binary_market() {
 		let context = get_context();
 		let config = Config::default();
-		testing_env!(env, context, config);
+		testing_env!(context, config);
 		let mut contract = BinaryMarket::default();
 
-	// 	let account_1_id = String::from("alice");
-	// 	let account_2_id = String::from("bob");
-	// 	ENV.as_mock().set_originator_id(account_1_id.as_bytes().to_vec());
+		let account_1_id = String::from("alice");
+		let account_2_id = String::from("bob");
+		ENV.as_mock().set_originator_id(account_1_id.as_bytes().to_vec());
 
-	// 	// Testing binary tree
-	// 	let order_1 = contract.place_order(0, 100, 50);
-	// 	let order_2 = contract.place_order(0, 100, 50);
-	// 	let order_3 = contract.place_order(0, 100, 50);
-	// 	let order_4 = contract.place_order(0, 100, 60);
-	// 	let order_5 = contract.place_order(0, 100, 10);
-	// 	let order_6 = contract.place_order(0, 100, 5);
-	// 	let order_7 = contract.place_order(0, 100, 50);
-	// 	let order_8 = contract.place_order(0, 100, 70);
-	// 	let order_9 = contract.place_order(0, 100, 55);
+		// Testing binary tree
+		let order_1 = contract.place_order(0, 100, 50);
+		let order_2 = contract.place_order(0, 100, 50);
+		let order_3 = contract.place_order(0, 100, 50);
+		let order_4 = contract.place_order(0, 100, 60);
+		let order_5 = contract.place_order(0, 100, 10);
+		let order_6 = contract.place_order(0, 100, 5);
+		let order_7 = contract.place_order(0, 100, 50);
+		let order_8 = contract.place_order(0, 100, 70);
+		let order_9 = contract.place_order(0, 100, 55);
 
-	// 	assert_eq!(order_1.prev, None);
-	// 	assert_eq!(order_2.prev.unwrap(), order_1.id);
-	// 	assert_eq!(order_3.prev.unwrap(), order_2.id);
-	// 	assert_eq!(order_4.prev.unwrap(), order_1.id);
-	// 	assert_eq!(order_5.prev.unwrap(), order_3.id);
-	// 	assert_eq!(order_6.prev.unwrap(), order_5.id);
-	// 	assert_eq!(order_7.prev.unwrap(), order_5.id);
-	// 	assert_eq!(order_8.prev.unwrap(), order_4.id);
-	// 	assert_eq!(order_9.prev.unwrap(), order_4.id);
+		assert_eq!(order_1.prev, None);
+		assert_eq!(order_2.prev.unwrap(), order_1.id);
+		assert_eq!(order_3.prev.unwrap(), order_2.id);
+		assert_eq!(order_4.prev.unwrap(), order_1.id);
+		assert_eq!(order_5.prev.unwrap(), order_3.id);
+		assert_eq!(order_6.prev.unwrap(), order_5.id);
+		assert_eq!(order_7.prev.unwrap(), order_5.id);
+		assert_eq!(order_8.prev.unwrap(), order_4.id);
+		assert_eq!(order_9.prev.unwrap(), order_4.id);
 
-	// 	{
-	// 		let updated_order_1 = contract.get_order(0, &order_1.id);
-	// 		let updated_order_2 = contract.get_order(0, &order_2.id);
-	// 		let updated_order_3 = contract.get_order(0, &order_3.id);
-	// 		let updated_order_4 = contract.get_order(0, &order_4.id);
-	// 		let updated_order_5 = contract.get_order(0, &order_5.id);
-	// 		let updated_order_6 = contract.get_order(0, &order_6.id);
-	// 		let updated_order_7 = contract.get_order(0, &order_7.id);
-	// 		let updated_order_8 = contract.get_order(0, &order_8.id);
-	// 		let updated_order_9 = contract.get_order(0, &order_9.id);
+		{
+			let updated_order_1 = contract.get_order(0, &order_1.id);
+			let updated_order_2 = contract.get_order(0, &order_2.id);
+			let updated_order_3 = contract.get_order(0, &order_3.id);
+			let updated_order_4 = contract.get_order(0, &order_4.id);
+			let updated_order_5 = contract.get_order(0, &order_5.id);
+			let updated_order_6 = contract.get_order(0, &order_6.id);
+			let updated_order_7 = contract.get_order(0, &order_7.id);
+			let updated_order_8 = contract.get_order(0, &order_8.id);
+			let updated_order_9 = contract.get_order(0, &order_9.id);
 
-	// 		assert_eq!(updated_order_1.worse_order_id.as_ref().unwrap(), &order_2.id);
-	// 		assert_eq!(updated_order_1.better_order_id.as_ref().unwrap(), &order_4.id);
-	// 		assert_eq!(updated_order_2.worse_order_id.as_ref().unwrap(), &order_3.id);
-	// 		assert_eq!(updated_order_3.worse_order_id.as_ref().unwrap(), &order_5.id);
-	// 		assert_eq!(updated_order_4.worse_order_id.as_ref().unwrap(), &order_9.id);
-	// 		assert_eq!(updated_order_4.better_order_id.as_ref().unwrap(), &order_8.id);
-	// 		assert_eq!(updated_order_5.worse_order_id.as_ref().unwrap(), &order_6.id);
-	// 		assert_eq!(updated_order_5.better_order_id.as_ref().unwrap(), &order_7.id);
-	// 	}
+			assert_eq!(updated_order_1.worse_order_id.as_ref().unwrap(), &order_2.id);
+			assert_eq!(updated_order_1.better_order_id.as_ref().unwrap(), &order_4.id);
+			assert_eq!(updated_order_2.worse_order_id.as_ref().unwrap(), &order_3.id);
+			assert_eq!(updated_order_3.worse_order_id.as_ref().unwrap(), &order_5.id);
+			assert_eq!(updated_order_4.worse_order_id.as_ref().unwrap(), &order_9.id);
+			assert_eq!(updated_order_4.better_order_id.as_ref().unwrap(), &order_8.id);
+			assert_eq!(updated_order_5.worse_order_id.as_ref().unwrap(), &order_6.id);
+			assert_eq!(updated_order_5.better_order_id.as_ref().unwrap(), &order_7.id);
+		}
 
 
-	// 	contract.cancel_order(0, &order_1.id);
-	// 	{
-	// 		let updated_order_2 = contract.get_order(0, &order_2.id);
-	// 		assert_eq!(updated_order_2.prev, None);
-	// 	}
+		contract.cancel_order(0, &order_1.id);
+		{
+			let updated_order_2 = contract.get_order(0, &order_2.id);
+			assert_eq!(updated_order_2.prev, None);
+		}
 	}
 }

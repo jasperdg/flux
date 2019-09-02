@@ -17,8 +17,7 @@ byteorder = "1"
 borsh = "0.2.1"
 bincode = "1.0"
 near-bindgen = { path = "./../near-bindgen/near-bindgen"}
-
-
+lazy_static = {version = "1.4.0", optional = true }
 wee_alloc = { version = "0.4.2", optional = true }
 
 [profile.release]
@@ -29,7 +28,7 @@ debug = false
 panic = "abort"
 
 [features]
-env_test = []
+env_test = ["near-bindgen/testing"]
 
 [workspace]
 members = []
