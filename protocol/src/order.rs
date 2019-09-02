@@ -18,7 +18,7 @@ pub struct Order {
 }
 
 impl Order {
-	pub fn new(owner: Vec<u8>, outcome: u64, id: Vec<u8>, amount: u64, price: u64, prev: Option<Vec<u8>>, better_order_id: Option<Vec<u8>>, worse_order_id: Option<Vec<u8>>) -> Order {
+	pub fn new(owner: Vec<u8>, outcome: u64, id: Vec<u8>, amount: u64, price: u64, amount_filled: u64, prev: Option<Vec<u8>>, better_order_id: Option<Vec<u8>>, worse_order_id: Option<Vec<u8>>) -> Order {
 		let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as u64;
 
 		Order {
@@ -27,7 +27,7 @@ impl Order {
 			outcome,
 			amount,
 			price,
-			amount_filled: 0,
+			amount_filled,
 			created_at: now,
 			prev,
 			better_order_id,

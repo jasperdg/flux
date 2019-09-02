@@ -28,14 +28,20 @@ pub struct BinaryMarket {
 #[near_bindgen]
 impl BinaryMarket {
 	fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> Order {
+		let mut amount_to_fill = amount;
+		let inverse_outcome = if outcome == 0 {1} else {0};
+		let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(Orderbook::new(outcome));
+		let mut total_filled = 0;
+		if inverse_orderbook.open_orders.len() > 0 {
+			total_filled = inverse_orderbook.fill_matching_orders(amount, price);
+			println!("total filled: {:?}", total_filled);
+		}
 		let orderbook = self.orderbooks.entry(outcome).or_insert(Orderbook::new(outcome));
-		let order = orderbook.add_new_order(amount, price);
+		let order = orderbook.add_new_order(amount, price, total_filled);
 		return order;
 	}
 	
 	fn cancel_order(&mut self, outcome: u64, order_id: &Vec<u8> ) -> bool{
-		// TODO: when an order is canceled or filled we need to keep track of how much money was filled for that outcome for that user to ensure 
-		// invalid markets can be paid out.
 		if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {
 			orderbook.get_mut().remove(order_id);
 			return true;
@@ -125,6 +131,10 @@ mod tests {
 		let order_7 = contract.place_order(0, 100, 50);
 		let order_8 = contract.place_order(0, 100, 70);
 		let order_9 = contract.place_order(0, 100, 55);
+
+		// let order_10 = contract.place_order(1, 50, 50);
+		// let order_11 = contract.place_order(1, 50, 50);
+		let order_12 = contract.place_order(1, 200, 50);
 
 		assert_eq!(order_1.prev, None);
 		assert_eq!(order_2.prev.unwrap(), order_1.id);
