@@ -20,13 +20,29 @@ pub struct BinaryMarket {
 	pub outcomes: u64,
 	pub	outcome_tokens: Vec<FungibleToken>,
 	pub description: String,
-	pub denominator: String,
+	pub denominator: Vec<u8>,
 	pub end_time: u64,
-	pub oracle_contract_address: String,
+	pub oracle_address: Vec<u8>,
 }
 
-#[near_bindgen]
+#[near_bindgen(init => new)]
 impl BinaryMarket {
+	pub fn new(outcomes: u64, description: String, denominator: Vec<u8>, end_time: u64, oracle_address: Vec<u8>) -> Self {
+		let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+		Self {
+			orderbooks: BTreeMap::new(),
+			order_ids_by_account_id:  BTreeMap::new(),
+			orders: BTreeMap::new(),
+			creator: env::signer_account_pk(),
+			outcomes,
+			outcome_tokens: initialize_outcome_tokens(outcomes),
+			description,
+			denominator,
+			end_time: now.as_secs() as u64 + (60 * 60 * 24), // in one day
+			oracle_address,
+		}
+    }
+
 	fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> Order {
 		let mut amount_to_fill = amount;
 		let inverse_outcome = if outcome == 0 {1} else {0};
@@ -68,26 +84,6 @@ impl BinaryMarket {
 	// 	return Some(Order{})
 	// }
 }
-
-impl Default for BinaryMarket {
-    fn default() -> Self {
-		let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
-		let outcomes = 2;
-		Self {
-			orderbooks: BTreeMap::new(),
-			order_ids_by_account_id:  BTreeMap::new(),
-			orders: BTreeMap::new(),
-			creator: env::signer_account_pk(),
-			outcomes,
-			outcome_tokens: initialize_outcome_tokens(outcomes),
-			description: String::from("Will x happen by T?"),
-			denominator: String::from("fungibletoken"),
-			end_time: now.as_secs() as u64 + (60 * 60 * 24), // in one day
-			oracle_contract_address: String::from("some_Ethereum_smart_contract_address"),
-		}
-    }
-}
-
 fn initialize_outcome_tokens(outcomes: u64) -> Vec<FungibleToken>{
 	let mut i = 0;
 	let mut outcome_tokens = Vec::new();
@@ -128,7 +124,7 @@ mod tests {
 		let context = get_context();
 		let config = Config::default();
 		testing_env!(context, config);
-		let mut contract = BinaryMarket::default();
+		let mut contract = BinaryMarket::new(2, "test".to_string(), Vec::new(), 123, Vec::new());
 
 		// Testing binary tree
 		let order_1 = contract.place_order(0, 100, 50);

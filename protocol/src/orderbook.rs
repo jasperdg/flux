@@ -18,9 +18,18 @@ pub struct Orderbook {
 	pub outcome_id: u64
 }
 
-#[near_bindgen]
+#[near_bindgen(init => new)]
 impl Orderbook {
-	// TODO: Only return order_id
+	pub fn new(outcome: u64) -> Orderbook {
+		Orderbook {
+			root: None,
+			open_orders: BTreeMap::new(),
+			filled_orders: BTreeMap::new(),
+			nonce: 0,
+			outcome_id: outcome,
+		}
+	}
+
 	pub fn add_new_order(&mut self, amount: u64, price: u64, amount_filled: u64) -> Order {
 		let order_id = self.to_order_id();
 		let outcome = self.outcome_id;
@@ -221,16 +230,6 @@ impl Orderbook {
 			let next_order_id = current_order.better_order_id.as_ref().unwrap();
 			let next_order = self.open_orders.get(next_order_id).unwrap();
 			return self.get_market_order(Some(next_order));
-		}
-	}
-
-	pub fn new(outcome: u64) -> Orderbook {
-		Orderbook {
-			root: None,
-			open_orders: BTreeMap::new(),
-			filled_orders: BTreeMap::new(),
-			nonce: 0,
-			outcome_id: outcome,
 		}
 	}
 }
