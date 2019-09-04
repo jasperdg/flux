@@ -154,7 +154,6 @@ impl Orderbook {
 		while match_exists && total_filled < amount {
 			let matching_order_id = match_optional.unwrap();
 			self.open_orders.entry(matching_order_id.to_vec()).and_modify(|matching_order| {
-				println!("matching order: {:?}\n", matching_order);
 				let match_amount_fillable = matching_order.amount - matching_order.amount_filled;
 				if match_amount_fillable == to_fill {
 					println!("1");
@@ -178,7 +177,6 @@ impl Orderbook {
 			});
 
 			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
-			println!("matching order after fill: {:?}\n", matching_order_after_fill);
 			self.filled_orders.insert(matching_order_id.to_vec(), matching_order_after_fill.clone());
 			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
 				assert_eq!(self.remove(&matching_order_id), &true);
@@ -216,7 +214,6 @@ impl Orderbook {
 		else {
 			current_order = last_order.unwrap();
 		}
-		println!("{:?}", current_order);
 
 		if current_order.better_order_id.is_none() {
 			return current_order.clone();
