@@ -17,6 +17,18 @@ pub struct FungibleToken {
 #[near_bindgen]
 impl FungibleToken {
 
+     pub fn new(max_supply: u64, name: String) -> Self {
+          let mut balances = HashMap::new();
+          balances.insert(env::signer_account_pk(), max_supply);
+          Self { 
+               balances: balances,
+               allowances: HashMap::new(),
+               creator: env::signer_account_pk(),
+               name: String::from(name),
+               max_supply,
+          }
+    }
+
      pub fn set_allowance(&mut self, spender: &String, allowance: u64) -> bool {
           let from_id = env::signer_account_pk();
           let spender_id = spender.to_string().into_bytes().to_vec();
@@ -78,23 +90,6 @@ impl FungibleToken {
           return balance;
      }
 }
-
-
-impl Default for FungibleToken {
-    fn default() -> Self {
-          let mut balances = HashMap::new();
-          let max_supply = 1000000000;
-          balances.insert(env::signer_account_pk(), max_supply);
-          Self { 
-               balances: balances,
-               allowances: HashMap::new(),
-               creator: env::signer_account_pk(),
-               name: String::from("FungToken"),
-               max_supply: max_supply,
-          }
-    }
-}
-
 // #[test]
 // fn setup_and_transfer_token() {
 //      ENV.set(Box::new(MockedEnvironment::new()));
