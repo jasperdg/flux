@@ -59,6 +59,10 @@ impl Orderbook {
 				parent_order.worse_order_id = Some(order.id.to_vec());
 			}
 		});
+
+		if order_parent_id == self.root.as_ref().unwrap().id {
+			self.root = Some(self.open_orders.get(&order_parent_id).unwrap().to_owned());
+		}
 		
 		order.prev = Some(order_parent_id.to_vec());
 		self.open_orders.insert(order.id.to_vec(), order.clone());
@@ -205,12 +209,14 @@ impl Orderbook {
 
 	pub fn get_market_order(& self, last_order: Option<&Order>) -> Order {
 		let mut current_order: &Order;
+
 		if last_order.is_none() {
 			current_order = &self.root.as_ref().unwrap();
 		}
 		else {
 			current_order = last_order.unwrap();
 		}
+		println!("{:?}", current_order);
 
 		if current_order.better_order_id.is_none() {
 			return current_order.clone();
