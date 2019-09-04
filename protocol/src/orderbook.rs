@@ -49,6 +49,10 @@ impl Orderbook {
 				parent_order.worse_order_id = Some(order.id.to_vec());
 			}
 		});
+
+		if order_parent_id == self.root.as_ref().unwrap().id {
+			self.root = Some(self.open_orders.get(&order_parent_id).unwrap().clone());
+		}
 		
 		order.prev = Some(order_parent_id.to_vec());
 		self.open_orders.insert(order.id.to_vec(), order.clone());
@@ -129,46 +133,84 @@ impl Orderbook {
 		return self.open_orders.get(id).unwrap();
 	}
 
-	pub fn fill_matching_orders(&self, amount: u64, price: u64) -> u64 {
-		let mut next_order = Some(self.root.as_ref().unwrap());
+	pub fn fill_matching_orders(&mut self, amount: u64, price: u64) -> u64 {
+		let mut root = self.root.as_ref().unwrap();
 		let mut total_filled = 0;
 		let mut to_fill = amount;
+		let matching_price = 100 - price; // Price of 1 set - the bid
+		let mut match_optional = self.find_order_by_price(&root, matching_price);
+		let mut match_exists = !match_optional.is_none();
 
-		while !next_order.is_none() {
-			next_order = self.find_order_by_price(next_order.unwrap(), price);
-			let fillable_amount = next_order.unwrap().amount;
-			if fillable_amount == to_fill {
-				total_filled += next_order.unwrap().amount;
-				next_order = None;
-			} 
-			else if fillable_amount > to_fill {
-				total_filled += amount;
-				next_order = None;
-			} else {
-				total_filled += fillable_amount;
-				to_fill -= fillable_amount;
+		while match_exists && total_filled < amount {
+			let matching_order_id = match_optional.unwrap();
+			self.open_orders.entry(matching_order_id.to_vec()).and_modify(|matching_order| {
+				let match_amount_fillable = matching_order.amount - matching_order.amount_filled;
+				if match_amount_fillable == to_fill {
+					println!("1");
+					total_filled += to_fill;
+					matching_order.amount_filled += to_fill;
+					to_fill = 0;
+				}
+				else if match_amount_fillable > to_fill {
+					println!("2");
+					total_filled += to_fill;
+					matching_order.amount_filled += to_fill;
+					to_fill = 0;
+				}
+				else {
+					println!("3");
+					total_filled += match_amount_fillable;
+					matching_order.amount_filled += match_amount_fillable;
+					to_fill -= match_amount_fillable;
+				}
+			});
+
+			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
+			self.filled_orders.insert(matching_order_id.to_vec(), matching_order_after_fill.clone());
+			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
+				assert_eq!(self.remove(&matching_order_id), &true);
 			}
-			// println!("{:#?}", next_order.unwrap().id);
+			root = self.root.as_ref().unwrap();
+			match_optional = self.find_order_by_price(&root, price);
+			match_exists = !match_optional.is_none();
 		}
+
 		return total_filled;
 	}
 
-	fn find_order_by_price<'b>(&'b self, next_order: &'b Order, target_price: u64) -> Option<&'b Order> {
-		println!("{}, {}", next_order.price, target_price);
-		if next_order.price == target_price {
-			return Some(next_order)
+	fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<Vec<u8>> {
+		if current_order.price == target_price {
+			return Some(current_order.id.to_vec());
 		}
-		else if next_order.price < target_price && !next_order.better_order_id.is_none() {
-			let next_order_id = next_order.better_order_id.as_ref().unwrap();
-			let next_order = self.open_orders.get(next_order_id).unwrap();
+		else if current_order.price < target_price && !current_order.better_order_id.is_none() {
+			let next_order_id = current_order.better_order_id.as_ref().unwrap();
+			let next_order = &mut self.open_orders.get(next_order_id).unwrap();
 			return self.find_order_by_price(next_order, target_price);
 		} 
-		else if next_order.price > target_price && !next_order.worse_order_id.is_none() {
-			let next_order_id = next_order.worse_order_id.as_ref().unwrap();
-			let next_order = self.open_orders.get(next_order_id).unwrap();
+		else if current_order.price > target_price && !current_order.worse_order_id.is_none() {
+			let next_order_id = current_order.worse_order_id.as_ref().unwrap();
+			let next_order = &mut self.open_orders.get(next_order_id).unwrap();
 			return self.find_order_by_price(next_order, target_price);		
 		}
 		return None;
+	}
+
+	pub fn get_market_order(& self, last_order: Option<&Order>) -> Order {
+		let mut current_order: &Order;
+		if last_order.is_none() {
+			current_order = &self.root.as_ref().unwrap();
+		}
+		else {
+			current_order = last_order.unwrap();
+		}
+
+		if current_order.better_order_id.is_none() {
+			return current_order.clone();
+		} else {
+			let next_order_id = current_order.better_order_id.as_ref().unwrap();
+			let next_order = self.open_orders.get(next_order_id).unwrap();
+			return self.get_market_order(Some(next_order));
+		}
 	}
 
 	pub fn new(outcome: u64) -> Orderbook {
