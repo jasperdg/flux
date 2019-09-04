@@ -142,50 +142,35 @@ mod tests {
 		let order_9 = contract.place_order(0, 100, 55);
 
 		// Testing fills on order addition.
-		// let order_10 = contract.place_order(1, 50, 50);
-		// let order_11 = contract.place_order(1, 50, 50);
+		let order_10 = contract.place_order(1, 50, 50);
+		let order_11 = contract.place_order(1, 50, 50);
 		let order_12 = contract.place_order(1, 200, 50);
 
 
 		let market_order = contract.get_market_order(0);
 		assert_eq!(market_order.price, 70);
 
-		// assert_eq!(order_1.prev, None);
-		// assert_eq!(order_2.prev.unwrap(), order_1.id);
-		// assert_eq!(order_3.prev.unwrap(), order_2.id);
-		// assert_eq!(order_4.prev.unwrap(), order_1.id);
-		// assert_eq!(order_5.prev.unwrap(), order_3.id);
-		// assert_eq!(order_6.prev.unwrap(), order_5.id);
-		// assert_eq!(order_7.prev.unwrap(), order_5.id);
-		// assert_eq!(order_8.prev.unwrap(), order_4.id);
-		// assert_eq!(order_9.prev.unwrap(), order_4.id);
+		{
+			let updated_order_4 = contract.get_order(0, &order_4.id);
+			let updated_order_5 = contract.get_order(0, &order_5.id);
+			let updated_order_6 = contract.get_order(0, &order_6.id);
+			let updated_order_7 = contract.get_order(0, &order_7.id);
+			let updated_order_8 = contract.get_order(0, &order_8.id);
+			let updated_order_9 = contract.get_order(0, &order_9.id);
+			
+			assert_eq!(updated_order_5.prev.as_ref(), None);
+			assert_eq!(updated_order_7.prev.as_ref().unwrap(), &updated_order_5.id);
+			assert_eq!(updated_order_4.prev.as_ref().unwrap(), &updated_order_7.id);
+			assert_eq!(updated_order_6.prev.as_ref().unwrap(), &updated_order_5.id);
+			assert_eq!(updated_order_8.prev.as_ref().unwrap(), &updated_order_4.id);
+			assert_eq!(updated_order_9.prev.as_ref().unwrap(), &updated_order_4.id);
 
-		// {
-		// 	let updated_order_1 = contract.get_order(0, &order_1.id);
-		// 	let updated_order_2 = contract.get_order(0, &order_2.id);
-		// 	let updated_order_3 = contract.get_order(0, &order_3.id);
-		// 	let updated_order_4 = contract.get_order(0, &order_4.id);
-		// 	let updated_order_5 = contract.get_order(0, &order_5.id);
-		// 	let updated_order_6 = contract.get_order(0, &order_6.id);
-		// 	let updated_order_7 = contract.get_order(0, &order_7.id);
-		// 	let updated_order_8 = contract.get_order(0, &order_8.id);
-		// 	let updated_order_9 = contract.get_order(0, &order_9.id);
+			assert_eq!(updated_order_5.worse_order_id.as_ref().unwrap(), &order_6.id);
+			assert_eq!(updated_order_5.better_order_id.as_ref().unwrap(), &order_7.id);
+			assert_eq!(updated_order_7.better_order_id.as_ref().unwrap(), &order_4.id);
+			assert_eq!(updated_order_4.better_order_id.as_ref().unwrap(), &order_8.id);
+			assert_eq!(updated_order_4.worse_order_id.as_ref().unwrap(), &order_9.id);
 
-		// 	assert_eq!(updated_order_1.worse_order_id.as_ref().unwrap(), &order_2.id);
-		// 	assert_eq!(updated_order_1.better_order_id.as_ref().unwrap(), &order_4.id);
-		// 	assert_eq!(updated_order_2.worse_order_id.as_ref().unwrap(), &order_3.id);
-		// 	assert_eq!(updated_order_3.worse_order_id.as_ref().unwrap(), &order_5.id);
-		// 	assert_eq!(updated_order_4.worse_order_id.as_ref().unwrap(), &order_9.id);
-		// 	assert_eq!(updated_order_4.better_order_id.as_ref().unwrap(), &order_8.id);
-		// 	assert_eq!(updated_order_5.worse_order_id.as_ref().unwrap(), &order_6.id);
-		// 	assert_eq!(updated_order_5.better_order_id.as_ref().unwrap(), &order_7.id);
-		// }
-
-
-		// contract.cancel_order(0, &order_1.id);
-		// {
-		// 	let updated_order_2 = contract.get_order(0, &order_2.id);
-		// 	assert_eq!(updated_order_2.prev, None);
-		// }
+		}
 	}
 }

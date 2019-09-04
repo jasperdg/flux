@@ -28,15 +28,25 @@ impl Orderbook {
 		let mut better_order_id: Option<Vec<u8>> = None;
 		let mut worse_order_id: Option<Vec<u8>> = None;
 		let order = &mut Order::new(env::signer_account_pk(), self.outcome_id, order_id.to_vec(), amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
+		if amount == amount_filled {
+			return self.add_filled_order(order);
+		} 
 		return self.add_order(order);
 	}
+
+	pub fn add_filled_order(&mut self, order: &mut Order) -> Order {
+
+		self.open_orders.insert(order.id.to_vec(), order.to_owned());
+		return order.to_owned();
+	}
+
 
 	pub fn add_order(&mut self, order: &mut Order) -> Order {
 		let is_first_order = self.root.is_none();
 
 		if is_first_order {
-			self.root = Some(order.clone());
 			order.prev = None;
+			self.root = Some(order.clone());
 			self.open_orders.insert(order.id.to_vec(), order.clone());
 			return order.to_owned();
 		}
@@ -49,10 +59,6 @@ impl Orderbook {
 				parent_order.worse_order_id = Some(order.id.to_vec());
 			}
 		});
-
-		if order_parent_id == self.root.as_ref().unwrap().id {
-			self.root = Some(self.open_orders.get(&order_parent_id).unwrap().clone());
-		}
 		
 		order.prev = Some(order_parent_id.to_vec());
 		self.open_orders.insert(order.id.to_vec(), order.clone());
@@ -61,6 +67,7 @@ impl Orderbook {
 
 	pub fn remove(&mut self, order_id: &Vec<u8>) -> &bool {
 		let mut order = self.open_orders.get(order_id).unwrap().to_owned();
+		self.open_orders.remove(order_id);
 		let has_parent_order_id = !order.prev.is_none();
 		let has_worse_order_id = !order.worse_order_id.is_none();
 		let has_better_order_id = !order.better_order_id.is_none();
@@ -94,7 +101,6 @@ impl Orderbook {
 			self.add_order(&mut better_order);
 		}
 
-		self.open_orders.remove(order_id);
 		return &true;
 	}
 
@@ -144,6 +150,7 @@ impl Orderbook {
 		while match_exists && total_filled < amount {
 			let matching_order_id = match_optional.unwrap();
 			self.open_orders.entry(matching_order_id.to_vec()).and_modify(|matching_order| {
+				println!("matching order: {:?}\n", matching_order);
 				let match_amount_fillable = matching_order.amount - matching_order.amount_filled;
 				if match_amount_fillable == to_fill {
 					println!("1");
@@ -163,9 +170,11 @@ impl Orderbook {
 					matching_order.amount_filled += match_amount_fillable;
 					to_fill -= match_amount_fillable;
 				}
+
 			});
 
 			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
+			println!("matching order after fill: {:?}\n", matching_order_after_fill);
 			self.filled_orders.insert(matching_order_id.to_vec(), matching_order_after_fill.clone());
 			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
 				assert_eq!(self.remove(&matching_order_id), &true);
@@ -174,7 +183,6 @@ impl Orderbook {
 			match_optional = self.find_order_by_price(&root, price);
 			match_exists = !match_optional.is_none();
 		}
-
 		return total_filled;
 	}
 
