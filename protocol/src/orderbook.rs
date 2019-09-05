@@ -44,8 +44,7 @@ impl Orderbook {
 	}
 
 	pub fn add_filled_order(&mut self, order: &mut Order) -> Order {
-
-		self.open_orders.insert(order.id.to_vec(), order.to_owned());
+		self.filled_orders.insert(order.id.to_vec(), order.to_owned());
 		return order.to_owned();
 	}
 
@@ -214,7 +213,7 @@ impl Orderbook {
 		return None;
 	}
 
-	pub fn get_market_order(& self, last_order: Option<&Order>) -> Order {
+	pub fn get_market_order(&self, last_order: Option<&Order>) -> Order {
 		let mut current_order: &Order;
 
 		if last_order.is_none() {
@@ -231,5 +230,18 @@ impl Orderbook {
 			let next_order = self.open_orders.get(next_order_id).unwrap();
 			return self.get_market_order(Some(next_order));
 		}
+	}
+
+	pub fn get_and_remove_owed_to_user(&mut self) -> u64{
+		let sender = env::signer_account_pk();
+		let mut total_owed = 0;
+		for (i, filled_order) in self.filled_orders.to_owned() {
+			if (filled_order.owner == sender) {
+				total_owed += filled_order.amount_filled * 10;
+				self.filled_orders.remove(&filled_order.id);
+			}
+		}
+		println!("total owed {}", total_owed);
+		return total_owed;
 	}
 }
