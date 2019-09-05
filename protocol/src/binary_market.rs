@@ -46,79 +46,75 @@ impl BinaryMarket {
 		}
     }
 
-	// fn resolute(&mut self, payout: Vec<u64>, invalid: bool) -> bool {
-	// 	// TODO: Make sure market can only be resoluted after end time
-	// 	assert_eq!(env::signer_account_pk(), self.creator);
-	// 	assert_eq!(payout.len(), 2);
-	// 	assert!(self.is_valid_payout(&payout, &invalid));
-	// 	self.payout = Some(payout);
-	// 	self.invalid = Some(invalid);
+	fn resolute(&mut self, payout: Vec<u64>, invalid: bool) -> bool {
+		// TODO: Make sure market can only be resoluted after end time
+		assert_eq!(env::signer_account_pk(), self.creator);
+		assert_eq!(payout.len(), 2);
+		assert!(self.is_valid_payout(&payout, &invalid));
+		self.payout = Some(payout);
+		self.invalid = Some(invalid);
 
-	// 	return true;
-	// }
+		return true;
+	}
 
-	// fn claim_earnings(&mut self) -> bool {
-	// 	assert!(!self.payout.is_none() && !self.invalid.is_none());
-	// 	if self.invalid.unwrap() {
-	// 		// TODO: Handle invalid market.
-	// 		return false;
-	// 	}
+	fn claim_earnings(&mut self) -> bool {
+		assert!(!self.payout.is_none() && !self.invalid.is_none());		
+		let mut amount_owed = 0;
+		for (i, orderbook) in &mut self.orderbooks {
+			let money_owed_if_winning_share = orderbook.get_and_remove_owed_to_user();
+			amount_owed += money_owed_if_winning_share * self.payout.as_ref().unwrap()[i.to_owned() as usize] / 10000;
+		}
+		
+		// TODO: Transfer back the amount owed to sender
+		return true;
+	}
 
-	// 	let mut amount_owed = 0;
-	// 	// let mut sender;
-	// 	for (i, orderbook) in &mut self.orderbooks {
-	// 		let money_owed_if_winning_share = orderbook.get_and_remove_owed_to_user();
-	// 		amount_owed += money_owed_if_winning_share * self.payout.as_ref().unwrap()[i.to_owned() as usize] / 10000;
-	// 	}
-	// 	return true;
-	// }
+	fn is_valid_payout(&self, payout: &Vec<u64>, invalid: &bool) -> bool {
+		return (payout[0] == 10000 && payout[1] == 0 && invalid == &false) || (payout[0] == 0 && payout[1] == 10000 && invalid == &false) || (payout[0] == 5000 && payout[1] == 5000 && invalid == &true);
+	}
 
-	// fn is_valid_payout(&self, payout: &Vec<u64>, invalid: &bool) -> bool {
-	// 	return (payout[0] == 10000 && payout[1] == 0 && invalid == &false) || (payout[0] == 0 && payout[1] == 10000 && invalid == &false) || (payout[0] == 5000 && payout[1] == 5000 && invalid == &true);
-	// }
-
-	// fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> Order {
-	// 	let total_cost = amount * price;
-	// 	assert!(env::attached_deposit() >= total_cost as u128);
-	// 	let mut amount_to_fill = amount;
-	// 	let inverse_outcome = if outcome == 0 {1} else {0};
-	// 	let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(Orderbook::new(outcome));
-	// 	let mut total_filled = 0;
-	// 	if inverse_orderbook.open_orders.len() > 0 {
-	// 		total_filled = inverse_orderbook.fill_matching_orders(amount, price);
-	// 		println!("total filled: {:?}", total_filled);
-	// 	}
-	// 	let orderbook = self.orderbooks.entry(outcome).or_insert(Orderbook::new(outcome));
-	// 	let order = orderbook.add_new_order(amount, price, total_filled);
-	// 	return order;
-	// }
+	fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> Order {
+		let total_cost = amount * price;
+		assert!(env::attached_deposit() >= total_cost as u128);
+		let mut amount_to_fill = amount;
+		let inverse_outcome = if outcome == 0 {1} else {0};
+		let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(Orderbook::new(outcome));
+		let mut total_filled = 0;
+		if inverse_orderbook.open_orders.len() > 0 {
+			total_filled = inverse_orderbook.fill_matching_orders(amount, price);
+			println!("total filled: {:?}", total_filled);
+		}
+		let orderbook = self.orderbooks.entry(outcome).or_insert(Orderbook::new(outcome));
+		let order = orderbook.add_new_order(amount, price, total_filled);
+		return order;
+	}
 	
-	// fn cancel_order(&mut self, outcome: u64, order_id: &Vec<u8> ) -> bool{
-	// 	if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {
-	// 		orderbook.get_mut().remove(order_id);
-	// 		return true;
-	// 	}
-	// 	return false;
-	// }
+	fn cancel_order(&mut self, outcome: u64, order_id: &Vec<u8> ) -> bool{
+		if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {
+			orderbook.get_mut().remove(order_id);
+			return true;
+		}
+		return false;
+	}
 
-	// fn get_order(&self, outcome: u64, order_id: &Vec<u8> ) -> &Order {
-	// 	let orderbook = self.orderbooks.get(&outcome).unwrap();
-	// 	return orderbook.get_order_by_id(order_id);
-	// }
+	fn get_order(&self, outcome: u64, order_id: &Vec<u8> ) -> &Order {
+		let orderbook = self.orderbooks.get(&outcome).unwrap();
+		return orderbook.get_order_by_id(order_id);
+	}
 
-	// fn get_market_order(&self, outcome: u64) -> Order {
-	// 	let orderbook = self.orderbooks.get(&outcome).unwrap();
-	// 	return orderbook.get_market_order(None);
-	// }
+	fn get_market_order(&self, outcome: u64) -> Order {
+		let orderbook = self.orderbooks.get(&outcome).unwrap();
+		return orderbook.get_market_order(None);
+	}
 	
-	// fn get_root(&self, outcome: u64) -> &Order {
-	// 	let orderbook = self.orderbooks.get(&outcome).unwrap();
-	// 	return orderbook.root.as_ref().unwrap();
-	// }
+	fn get_root(&self, outcome: u64) -> &Order {
+		let orderbook = self.orderbooks.get(&outcome).unwrap();
+		return orderbook.root.as_ref().unwrap();
+	}
 
-	// fn get_outcome_token(&self, outcome: u64) -> &FungibleToken{
-	// 	return &self.outcome_tokens[outcome as usize];
-	// }
+	fn get_outcome_token(&self, outcome: u64) -> &FungibleToken{
+		return &self.outcome_tokens[outcome as usize];
+	}
 
 	
 }
@@ -136,52 +132,52 @@ fn initialize_outcome_tokens(outcomes: u64) -> Vec<FungibleToken>{
 	return outcome_tokens;
 }
 
-// #[cfg(feature = "env_test")]
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use near_bindgen::MockedBlockchain;
-//     use near_bindgen::{VMContext, Config, testing_env};
+#[cfg(feature = "env_test")]
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use near_bindgen::MockedBlockchain;
+    use near_bindgen::{VMContext, Config, testing_env};
 
-// 	fn get_context(value: u128) -> VMContext {
-// 		VMContext {
-// 			current_account_id: "alice.near".to_string(),
-//             signer_account_id: "bob.near".to_string(),
-//             signer_account_pk: vec![0, 1, 2],
-//             predecessor_account_id: "carol.near".to_string(),
-//             input: vec![],
-//             block_index: 0,
-//             account_balance: 0,
-//             storage_usage: 0,
-//             attached_deposit: value,
-//             prepaid_gas: 10u64.pow(9),
-//             random_seed: vec![0, 1, 2],
-//             free_of_charge: false,
-//             output_data_receivers: vec![],
-// 		}
-// 	}
+	fn get_context(value: u128) -> VMContext {
+		VMContext {
+			current_account_id: "alice.near".to_string(),
+            signer_account_id: "bob.near".to_string(),
+            signer_account_pk: vec![0, 1, 2],
+            predecessor_account_id: "carol.near".to_string(),
+            input: vec![],
+            block_index: 0,
+            account_balance: 0,
+            storage_usage: 0,
+            attached_deposit: value,
+            prepaid_gas: 10u64.pow(9),
+            random_seed: vec![0, 1, 2],
+            free_of_charge: false,
+            output_data_receivers: vec![],
+		}
+	}
 
-//     #[test]
-// 	fn test_binary_market() {
-// 		let mut context = get_context(5000000);
-// 		let config = Config::default();
-// 		testing_env!(context, config);
-// 		let mut contract = BinaryMarket::new(2, "test".to_string(), Vec::new(), 123, Vec::new());
+    #[test]
+	fn test_binary_market() {
+		let mut context = get_context(5000000);
+		let config = Config::default();
+		testing_env!(context, config);
+		let mut contract = BinaryMarket::new(2, "test".to_string(), Vec::new(), 123, Vec::new());
 
-// 		// Testing binary tree
-// 		let order_1 = contract.place_order(0, 100000, 50);
-// 		let order_2 = contract.place_order(0, 100000, 50);
-// 		let order_3 = contract.place_order(0, 100000, 50);
+		// Testing binary tree
+		let order_1 = contract.place_order(0, 100000, 50);
+		let order_2 = contract.place_order(0, 100000, 50);
+		let order_3 = contract.place_order(0, 100000, 50);
 
-// 		let order_4 = contract.place_order(1, 100000, 50);
-// 		let order_5 = contract.place_order(1, 100000, 50);
+		let order_4 = contract.place_order(1, 100000, 50);
+		let order_5 = contract.place_order(1, 100000, 50);
 
-// 		assert_eq!(contract.resolute(vec![10000, 0], false), true);
+		assert_eq!(contract.resolute(vec![5000, 5000], true), true);
 
-// 		let earnings = contract.claim_earnings();
+		let earnings = contract.claim_earnings();
 
-// 	}
-// }
+	}
+}
 
 
 		// let order_3 = contract.place_order(0, 100000, 50);
