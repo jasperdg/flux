@@ -9,19 +9,18 @@ use near_bindgen::{near_bindgen, env};
 use crate::order::Order;
 
 #[near_bindgen]
-#[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Orderbook {
-	pub root: Option<Order>,
-	pub open_orders: BTreeMap<Vec<u8>, Order>,
-	pub filled_orders: BTreeMap<Vec<u8>, Order>,
-	pub nonce: u64,
-	pub outcome_id: u64
+	root: Option<Order>,
+	open_orders: BTreeMap<Vec<u8>, Order>,
+	filled_orders: BTreeMap<Vec<u8>, Order>,
+	nonce: u64,
+	outcome_id: u64
 }
 
-#[near_bindgen(init => new)]
 impl Orderbook {
-	pub fn new(outcome: u64) -> Orderbook {
-		Orderbook {
+	pub fn new(outcome: u64) -> Self {
+		Self {
 			root: None,
 			open_orders: BTreeMap::new(),
 			filled_orders: BTreeMap::new(),
@@ -128,6 +127,10 @@ impl Orderbook {
 		return current_order_id;
 	}
 
+	pub fn get_open_orders(&self) -> &BTreeMap<Vec<u8>, Order> {
+		return &self.open_orders;
+	}
+
 	fn get_next_order(&mut self, current_order_id: &Vec<u8>, new_order_price: u64) -> Option<&Vec<u8>> {
 		let current_order = self.open_orders.get(&current_order_id.to_vec()).unwrap();
 		if new_order_price <= current_order.price {
@@ -164,19 +167,16 @@ impl Orderbook {
 			self.open_orders.entry(matching_order_id.to_vec()).and_modify(|matching_order| {
 				let match_amount_fillable = matching_order.amount - matching_order.amount_filled;
 				if match_amount_fillable == to_fill {
-					println!("1");
 					total_filled += to_fill;
 					matching_order.amount_filled += to_fill;
 					to_fill = 0;
 				}
 				else if match_amount_fillable > to_fill {
-					println!("2");
 					total_filled += to_fill;
 					matching_order.amount_filled += to_fill;
 					to_fill = 0;
 				}
 				else {
-					println!("3");
 					total_filled += match_amount_fillable;
 					matching_order.amount_filled += match_amount_fillable;
 					to_fill -= match_amount_fillable;
@@ -241,7 +241,6 @@ impl Orderbook {
 				self.filled_orders.remove(&filled_order.id);
 			}
 		}
-		println!("total owed {}", total_owed);
 		return total_owed;
 	}
 }

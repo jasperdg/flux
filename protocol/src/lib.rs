@@ -7,5 +7,5 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 #[macro_use]
 mod order;
 mod orderbook;
-mod fungible_token;
 mod binary_market;
+mod markets;

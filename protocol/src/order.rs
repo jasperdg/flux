@@ -1,9 +1,13 @@
+use std::string::String;
+use std::collections::HashMap;
+use near_bindgen::{near_bindgen, env};
 use borsh::{BorshDeserialize, BorshSerialize};
+use serde::{Deserialize, Serialize};
 use std::clone::Clone;
 use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug, Clone)]
+#[near_bindgen]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug, Clone)]
 pub struct Order {
 	pub id: Vec<u8>,
 	pub owner: Vec<u8>,
@@ -17,10 +21,10 @@ pub struct Order {
 	pub worse_order_id: Option<Vec<u8>>,
 }
 
-impl Order {
-	pub fn new(owner: Vec<u8>, outcome: u64, id: Vec<u8>, amount: u64, price: u64, amount_filled: u64, prev: Option<Vec<u8>>, better_order_id: Option<Vec<u8>>, worse_order_id: Option<Vec<u8>>) -> Order {
-		let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as u64;
 
+impl Order {
+	pub fn new(owner: Vec<u8>, outcome: u64, id: Vec<u8>, amount: u64, price: u64, amount_filled: u64, prev: Option<Vec<u8>>, better_order_id: Option<Vec<u8>>, worse_order_id: Option<Vec<u8>>) -> Self {
+		let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs() as u64;
 		Order {
 			id,
 			owner,
@@ -41,5 +45,4 @@ impl Order {
 		} 
 		return false;
 	}
-
 }
