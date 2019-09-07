@@ -5,15 +5,14 @@ use std::time::SystemTime;
 use near_bindgen::{near_bindgen, env};
 use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
-use crate::order::Order;
-use crate::orderbook::Orderbook;
+
+mod orderbook;
 
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct BinaryMarket {
-	orderbooks: BTreeMap<u64, Orderbook>,
+	orderbooks: BTreeMap<u64, orderbook::Orderbook>,
 	order_ids_by_account_id: BTreeMap<Vec<u8>, Vec<Vec<u8>>>,
-	orders: BTreeMap<Vec<u8>, Order>,
 	creator: Vec<u8>,
 	outcomes: u64,
 	description: String,
@@ -29,7 +28,6 @@ impl BinaryMarket {
 		Self {
 			orderbooks: BTreeMap::new(),
 			order_ids_by_account_id:  BTreeMap::new(),
-			orders: BTreeMap::new(),
 			creator: env::signer_account_pk(),
 			outcomes,
 			description,
@@ -39,7 +37,7 @@ impl BinaryMarket {
 			payout: None,
 			invalid: None
 		}
-    }
+	}
 
 	pub fn resolute(&mut self, payout: Vec<u64>, invalid: bool) -> bool {
 		// TODO: Make sure market can only be resoluted after end time
@@ -68,17 +66,17 @@ impl BinaryMarket {
 		return (payout[0] == 10000 && payout[1] == 0 && invalid == &false) || (payout[0] == 0 && payout[1] == 10000 && invalid == &false) || (payout[0] == 5000 && payout[1] == 5000 && invalid == &true);
 	}
 
-	pub fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> Order {
+	pub fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> orderbook::Order {
 		let total_cost = amount * price;
 		assert!(env::attached_deposit() >= total_cost as u128);
 		let mut amount_to_fill = amount;
 		let inverse_outcome = if outcome == 0 {1} else {0};
-		let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(Orderbook::new(outcome));
+		let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(orderbook::Orderbook::new(outcome));
 		let mut total_filled = 0;
 		if inverse_orderbook.get_open_orders().len() > 0 {
 			total_filled = inverse_orderbook.fill_matching_orders(amount, price);
 		}
-		let orderbook = self.orderbooks.entry(outcome).or_insert(Orderbook::new(outcome));
+		let orderbook = self.orderbooks.entry(outcome).or_insert(orderbook::Orderbook::new(outcome));
 		let order = orderbook.add_new_order(amount, price, total_filled);
 		return order;
 	}
@@ -91,12 +89,12 @@ impl BinaryMarket {
 		return false;
 	}
 
-	fn get_order(&self, outcome: u64, order_id: &Vec<u8> ) -> &Order {
+	fn get_order(&self, outcome: u64, order_id: &Vec<u8> ) -> &orderbook::Order {
 		let orderbook = self.orderbooks.get(&outcome).unwrap();
 		return orderbook.get_order_by_id(order_id);
 	}
 
-	fn get_market_order(&self, outcome: u64) -> Order {
+	fn get_market_order(&self, outcome: u64) -> orderbook::Order {
 		let orderbook = self.orderbooks.get(&outcome).unwrap();
 		return orderbook.get_market_order(None);
 	}

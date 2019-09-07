@@ -6,7 +6,9 @@ use std::panic;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use near_bindgen::{near_bindgen, env};
-use crate::order::Order;
+mod order;
+
+pub type Order = order::Order;
 
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
@@ -244,3 +246,4 @@ impl Orderbook {
 		return total_owed;
 	}
 }
+
