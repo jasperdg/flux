@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use near_bindgen::{near_bindgen, env};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use crate::binary_market::BinaryMarket;
+
+mod binary_market;
+pub type BinaryMarket = binary_market::BinaryMarket;
 
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]

@@ -5,4 +5,4 @@
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[macro_use]
-mod binary_market;
+mod markets;
