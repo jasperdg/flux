@@ -16,7 +16,6 @@ pub struct BinaryMarket {
 	creator: Vec<u8>,
 	outcomes: u64,
 	description: String,
-	denominator: Vec<u8>,
 	end_time: u64,
 	oracle_address: Vec<u8>,
 	payout: Option<Vec<u64>>,
@@ -24,16 +23,15 @@ pub struct BinaryMarket {
 }
 
 impl BinaryMarket {
-	pub fn new(outcomes: u64, description: String, denominator: Vec<u8>, end_time: u64, oracle_address: Vec<u8>) -> Self {
+	pub fn new(outcomes: u64, description: String, end_time: u64) -> Self {
 		Self {
 			orderbooks: BTreeMap::new(),
 			order_ids_by_account_id:  BTreeMap::new(),
 			creator: env::signer_account_pk(),
 			outcomes,
 			description,
-			denominator,
 			end_time, // in one day
-			oracle_address,
+			oracle_address: env::signer_account_pk(),
 			payout: None,
 			invalid: None
 		}

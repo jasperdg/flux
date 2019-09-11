@@ -22,10 +22,11 @@ impl Markets {
 		}
 	}
 
-	pub fn create_market(&mut self, outcomes: u64, description: String, denominator: Vec<u8>, end_time: u64, oracle_address: Vec<u8>) {
+	pub fn create_market(&mut self, outcomes: u64, description: String, end_time: u64) -> bool {
 		// Do some market validation
-		let new_market = BinaryMarket::new(outcomes, description.to_string(), denominator, end_time, oracle_address);
+		let new_market = BinaryMarket::new(outcomes, description.to_string(), end_time);
 		self.active_markets.push(new_market);
+		return true;
 	}
 
 	pub fn get_all_markets(&self) -> &Vec<BinaryMarket> { 
@@ -35,6 +36,12 @@ impl Markets {
 	pub fn get_market(&mut self, id: u64) -> &mut BinaryMarket {
 		return &mut self.active_markets[id as usize];
 	}
+
+	pub fn delete_market(&mut self, id: u64) -> bool {
+		self.active_markets.remove(id as usize);
+		return true;
+	}
+
 }
 
 
@@ -69,7 +76,7 @@ mod tests {
 		let config = Config::default();
 		testing_env!(context, config);
 		let mut contract = Markets::new();
-		contract.create_market(2, "will x happen by T".to_string(), Vec::new(), 123, Vec::new());
+		contract.create_market(2, "will x happen by T".to_string(), Vec::new(), 123);
 		let all_markets = contract.get_all_markets();
 		let market = contract.get_market(0);
 
