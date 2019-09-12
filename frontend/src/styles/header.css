@@ -1,0 +1,32 @@
+header #header-logo {
+	width: 18%;
+	display: inline-block;
+	padding: 0 5%;
+}
+
+.login-button {
+	color: white;
+	background-color: #FF009C;
+	font-family: "Gilroy";
+	border: none;
+	border-radius: 6px;
+	padding: 8px 15px;
+	font-size: 18px;
+	position: absolute;
+	right: 5%;
+	top: 2%;
+}
+.account-info {
+	width: 40%;
+	position: absolute;
+	left: 30%;
+	top: 1.5%;
+}
+
+.account-info span {
+	font-family: "Lato-bold";
+	line-height: 140%;
+	display: block;
+	text-align: center;
+
+}

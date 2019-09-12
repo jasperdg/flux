@@ -1,10 +1,32 @@
+@font-face {
+  font-family: 'Gilroy';
+  src: local('Gilroy-ExtraBold'), url("./../fonts/Gilroy-ExtraBold.otf") format('otf');
+  font-weight: 600;
+  line-height: 140%;
+}
+@font-face {
+  font-family: 'Lato';
+  src: local('Lato-Regular'), url("./../fonts/Lato-Regular.ttf") format('ttf');
+  line-height: 140%;
+  font-size: 16px;
+  color: #3B3B3B;
+}
+@font-face {
+  font-family: 'Lato-bold';
+  src: local('Lato-Bold'), url("./../fonts/Lato-Bold.ttf") format('ttf');
+  line-height: 140%;
+  font-size: 16px;
+  color: #3B3B3B;
+}
+body h1, body h2, body h3, body h4 {
+  font-family: 'Gilroy';
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Lato';
+  /* -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; */
 }
 
 code {

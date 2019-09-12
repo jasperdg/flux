@@ -1,0 +1,120 @@
+.market {
+	width: 90%;
+	height: 95%;
+	padding: 0 5%;
+	position: relative;
+	display: block;
+	background-color: white;
+	border-radius: 8px;
+	box-sizing: border-box;
+	-webkit-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+	-moz-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+	box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+	margin-left: 5%;
+}
+.order-type-toggle {
+	float: right;
+}
+.buy-button {
+	width: 45%;
+	padding: 25px;
+	border: none;
+	color: white;
+	font-family: 'Gilroy';
+	font-size: 20px;
+	border-radius: 6px;
+	
+}
+.market .earnings.pink  {
+	color: #FF009C;
+}
+.market .earnings.blue  {
+	color: #5400FF;
+	
+}
+.market .earnings{ 
+	font-size: 18px;
+	width: 45%;
+	text-align: center;
+}
+.market .bottom-section {
+	width: 89%;
+	position: absolute;
+	bottom: 2.5%;
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+}
+
+.buy-button.no {
+	background-color: #FF009C;
+	left: 0
+}
+
+.buy-button.yes {
+	background-color: #5400FF;
+	left: 50%;
+}
+
+.blue .mdc-text-field .mdc-line-ripple {
+	background-color: #5400FF!important;
+}
+.pink .mdc-text-field .mdc-line-ripple {
+	background-color: #FF009C!important;
+}
+.mdc-text-field::before, .mdc-text-field::after {
+	background-color: transparent!important;
+}
+.mdc-text-field:not(.mdc-text-field--disabled):not(.mdc-text-field--textarea){
+	background-color: transparent!important;
+}
+.mdc-text-field {
+	background-color: transparent!important;
+}
+.mdc-text-field__input {
+	font-size: 22px!important;
+	font-weight: 400!important;
+}
+
+.material-input {
+	width: 100%;
+}
+
+.blue .mdc-floating-label--float-above {
+	color: #5400FF!important;
+}
+.pink .mdc-floating-label--float-above {
+	color: #FF009C!important;
+}
+.market-description {
+	color: #310094;
+	padding: 50px 30px;
+	display: block;
+	margin: 0 auto;
+}
+
+.market .label-input input {
+	z-index: 100;
+}
+.market label {
+	display: block;
+	font-weight: 600;
+}
+.order-type-toggle-section label{
+	vertical-align: super;
+	display: inline;
+	margin-right: 25px;
+}
+.order-type-toggle-section {
+	margin-bottom: 18px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+	padding-bottom: 12px;
+}
+
+.mdc-text-field:not(.mdc-text-field--disabled) {
+	background-color: transparent;
+}
+
+.mdc-text-field:not(.mdc-text-field--enabled) {
+	background-color: transparent;
+}

@@ -1,10 +1,9 @@
 #markets-view {
-	width: 90vw;
-	height: 90vh;
+	width: 100vw;
+	height: 85vh;
 	display: block;
 	margin: 0 auto;
 }
-
 
 /* Nav dots */
 .dots-ul {
@@ -15,7 +14,7 @@
 	list-style: none;
 	cursor: default;
 	justify-content: space-between;
-	width: 85px;
+	width: 120px;
 }
 
 .dots-ul li {
@@ -33,7 +32,7 @@
 	outline: none;
 	border-radius: 50%;
 	background-color: #fff;
-	background-color: rgba(255,255,255,0.3);
+	background-color: rgba(255, 0, 156, 0.3);
 	text-indent: -999em;
 	cursor: pointer; /* make the text accessible to screen readers */
 	position: absolute;
@@ -46,11 +45,11 @@
 
 .dots-ulli a:hover,
 .dots-ul li a:focus {
-	background-color: white;
+	background-color: #FF009C;
 }
 
 .dots-ul .carousel__dot--selected li  a {
-	background-color: white;
+	background-color: #FF009C;
 	-webkit-transform: scale(1.5);
 	transform: scale(1.5);
 }
