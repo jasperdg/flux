@@ -9,9 +9,9 @@
             case 'development':
                 return {
                     networkId: 'default',
-                    nodeUrl: 'http://192.168.1.136:3030',
+                    nodeUrl: 'http://localhost:3030',
                     contractName: CONTRACT_NAME,
-                    walletUrl: 'http://192.168.1.136:3000/wallet',
+                    walletUrl: 'http://localhost:3000/wallet',
                     initialBalance: 100000000,
                 };
             case 'staging':
