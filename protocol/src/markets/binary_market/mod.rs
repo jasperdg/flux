@@ -6,20 +6,21 @@ use near_bindgen::{near_bindgen, env};
 use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
 
-mod orderbook;
+pub mod orderbook;
 
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct BinaryMarket {
-	orderbooks: BTreeMap<u64, orderbook::Orderbook>,
-	order_ids_by_account_id: BTreeMap<Vec<u8>, Vec<Vec<u8>>>,
-	creator: Vec<u8>,
-	outcomes: u64,
-	description: String,
-	end_time: u64,
-	oracle_address: Vec<u8>,
-	payout: Option<Vec<u64>>,
-	invalid: Option<bool>
+	pub orderbooks: BTreeMap<u64, orderbook::Orderbook>,
+	pub order_ids_by_account_id: BTreeMap<Vec<u8>, Vec<Vec<u8>>>,
+	pub creator: Vec<u8>,
+	pub outcomes: u64,
+	pub description: String,
+	pub end_time: u64,
+	pub oracle_address: Vec<u8>,
+	pub payout: Option<Vec<u64>>,
+	pub invalid: Option<bool>,
+	pub resoluted: bool
 }
 
 impl BinaryMarket {
@@ -33,23 +34,26 @@ impl BinaryMarket {
 			end_time, // in one day
 			oracle_address: env::signer_account_pk(),
 			payout: None,
-			invalid: None
+			invalid: None,
+			resoluted: false
 		}
 	}
 
 	pub fn resolute(&mut self, payout: Vec<u64>, invalid: bool) -> bool {
 		// TODO: Make sure market can only be resoluted after end time
+		assert_eq!(self.resoluted, false);
 		assert_eq!(env::signer_account_pk(), self.creator);
 		assert_eq!(payout.len(), 2);
 		assert!(self.is_valid_payout(&payout, &invalid));
 		self.payout = Some(payout);
 		self.invalid = Some(invalid);
-
+		self.resoluted = true;
 		return true;
 	}
 
 	pub fn claim_earnings(&mut self) -> bool {
 		assert!(!self.payout.is_none() && !self.invalid.is_none());		
+		assert_eq!(self.resoluted, true);
 		let mut amount_owed = 0;
 		for (i, orderbook) in &mut self.orderbooks {
 			let money_owed_if_winning_share = orderbook.get_and_remove_owed_to_user();
@@ -57,16 +61,21 @@ impl BinaryMarket {
 		}
 		
 		// TODO: Transfer back the amount owed to sender
-		return true;
+		if amount_owed > 0 {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	fn is_valid_payout(&self, payout: &Vec<u64>, invalid: &bool) -> bool {
 		return (payout[0] == 10000 && payout[1] == 0 && invalid == &false) || (payout[0] == 0 && payout[1] == 10000 && invalid == &false) || (payout[0] == 5000 && payout[1] == 5000 && invalid == &true);
 	}
 
-	pub fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> orderbook::Order {
+	pub fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> bool {
+		assert_eq!(self.resoluted, false);
 		let total_cost = amount * price;
-		assert!(env::attached_deposit() >= total_cost as u128);
+		// assert!(env::attached_deposit() >= total_cost as u128);
 		let mut amount_to_fill = amount;
 		let inverse_outcome = if outcome == 0 {1} else {0};
 		let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(orderbook::Orderbook::new(outcome));
@@ -76,7 +85,7 @@ impl BinaryMarket {
 		}
 		let orderbook = self.orderbooks.entry(outcome).or_insert(orderbook::Orderbook::new(outcome));
 		let order = orderbook.add_new_order(amount, price, total_filled);
-		return order;
+		return true;
 	}
 	
 	fn cancel_order(&mut self, outcome: u64, order_id: &Vec<u8> ) -> bool{

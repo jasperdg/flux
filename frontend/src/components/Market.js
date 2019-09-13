@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import '../styles/market.css';
 import Switch from "react-switch";
-import '@material/react-text-field/dist/text-field.css';
+import '@material/react-text-field/dist/text-field.min.css';
 import TextField, {HelperText, Input} from '@material/react-text-field';
 
 class Market extends Component {
@@ -38,16 +38,16 @@ class Market extends Component {
   placeOrder = (position) => {
     const { placeOrder, index } = this.props;
     const { price, spend } = this.state;
-    // if (placeOrder) {
-    //   if (spend === "" || spend < 10000) throw "please enter how much you want to spend";
-    //   else {
-    //     const amount = Math.round(spend / price);
-    //     const outcome = position === "no" ? 0 : 1;
-    //     this.props.placeOrder(index, outcome, amount, price);
-    //   }
-    // } else {
-    //   console.error("market contract hasn't been initialized yet, need spinner to load market")
-    // }
+    if (placeOrder) {
+      if (spend === "" || spend < 10000) throw "please enter how much you want to spend";
+      else {
+        const amount = Math.round(spend / price);
+        const outcome = position === "no" ? 0 : 1;
+        this.props.placeOrder(index, outcome, amount, price);
+      }
+    } else {
+      console.error("market contract hasn't been initialized yet, need spinner to load market")
+    }
   }
 
   render() {

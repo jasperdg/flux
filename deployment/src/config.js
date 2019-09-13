@@ -1,5 +1,5 @@
 (function() {
-    const CONTRACT_NAME = 'flux_protocol'; /* TODO: fill this in! */
+    const CONTRACT_NAME = 'flux_protocol9'; /* TODO: fill this in! */
     const DEFAULT_ENV = 'development';
 
     function getConfig(env) {
@@ -11,7 +11,7 @@
                     networkId: 'default',
                     nodeUrl: 'http://localhost:3030',
                     contractName: CONTRACT_NAME,
-                    walletUrl: 'https://wallet.nearprotocol.com',
+                    walletUrl: 'http://localhost:3000/wallet',
                     initialBalance: 100000000,
                 };
             case 'staging':
@@ -27,9 +27,9 @@
                     networkId: 'local',
                     nodeUrl: 'http://localhost:3030',
                     keyPath: `${process.env.HOME}/.near/validator_key.json`,
-                    walletUrl: 'http://localhost:4000/wallet',
+                    walletUrl: 'http://localhost:3000/wallet',
                     contractName: CONTRACT_NAME,
-                    initialBalance: 100000000,
+                    initialBalance: 1000000000000,
                 };
             case 'test':
                 return {

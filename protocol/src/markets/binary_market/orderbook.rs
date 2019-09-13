@@ -13,11 +13,11 @@ pub type Order = order::Order;
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Orderbook {
-	root: Option<Order>,
-	open_orders: BTreeMap<Vec<u8>, Order>,
-	filled_orders: BTreeMap<Vec<u8>, Order>,
-	nonce: u64,
-	outcome_id: u64
+	pub root: Option<Order>,
+	pub open_orders: BTreeMap<Vec<u8>, Order>,
+	pub filled_orders: BTreeMap<Vec<u8>, Order>,
+	pub nonce: u64,
+	pub outcome_id: u64
 }
 
 impl Orderbook {
@@ -31,24 +31,26 @@ impl Orderbook {
 		}
 	}
 
-	pub fn add_new_order(&mut self, amount: u64, price: u64, amount_filled: u64) -> Order {
+	pub fn add_new_order(&mut self, amount: u64, price: u64, amount_filled: u64) -> bool {
 		let order_id = self.to_order_id();
 		let outcome = self.outcome_id;
 		let mut prev_id: Option<Vec<u8>> = None;
 		let mut better_order_id: Option<Vec<u8>> = None;
 		let mut worse_order_id: Option<Vec<u8>> = None;
-		let order = &mut Order::new(env::signer_account_pk(), self.outcome_id, order_id.to_vec(), amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
+		let mut order = &mut Order::new(env::signer_account_pk(), self.outcome_id, order_id.to_vec(), amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
+
 		if amount == amount_filled {
-			return self.add_filled_order(order);
+			self.add_filled_order(order);
+			return true;
 		} 
-		return self.add_order(order);
+		self.add_order(order);
+		return true
 	}
 
 	pub fn add_filled_order(&mut self, order: &mut Order) -> Order {
 		self.filled_orders.insert(order.id.to_vec(), order.to_owned());
 		return order.to_owned();
 	}
-
 
 	pub fn add_order(&mut self, order: &mut Order) -> Order {
 		let is_first_order = self.root.is_none();
@@ -117,7 +119,7 @@ impl Orderbook {
 		return &true;
 	}
 
-	fn descend_tree_for_parent(&mut self, price: u64) -> Vec<u8> {
+	pub fn descend_tree_for_parent(&mut self, price: u64) -> Vec<u8> {
 		let root = self.root.as_ref().unwrap();
 		let mut current_order_id = root.id.to_vec();
 		let mut next_order_id: Option<&Vec<u8>> = self.get_next_order(&current_order_id, price);
@@ -133,7 +135,7 @@ impl Orderbook {
 		return &self.open_orders;
 	}
 
-	fn get_next_order(&mut self, current_order_id: &Vec<u8>, new_order_price: u64) -> Option<&Vec<u8>> {
+	pub fn get_next_order(&mut self, current_order_id: &Vec<u8>, new_order_price: u64) -> Option<&Vec<u8>> {
 		let current_order = self.open_orders.get(&current_order_id.to_vec()).unwrap();
 		if new_order_price <= current_order.price {
 			return current_order.worse_order_id.as_ref();
@@ -142,7 +144,7 @@ impl Orderbook {
 		}
 	}
 
-	fn to_order_id(&mut self) -> Vec<u8> {
+	pub fn to_order_id(&mut self) -> Vec<u8> {
 		let mut outcome = vec![];
 		outcome.write_u64::<BigEndian>(self.outcome_id).unwrap();
 		let mut nonce = vec![];
@@ -198,7 +200,7 @@ impl Orderbook {
 		return total_filled;
 	}
 
-	fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<Vec<u8>> {
+	pub fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<Vec<u8>> {
 		if current_order.price == target_price {
 			return Some(current_order.id.to_vec());
 		}

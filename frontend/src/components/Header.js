@@ -2,18 +2,19 @@ import React from 'react';
 import '../styles/header.css';
 import fluxLogo from '../assets/flux-logo.png';
 
+
 function Header(props) {
+
 	function signIn() {
-		console.log(props);
 		props.walletAccount.requestSignIn(
 			window.nearConfig.contractName,
-			'flux_protocol',
+			window.nearConfig.contractName,
 		);
-  }
+  	}
   
 	function signOut() {
 		props.walletAccount.signOut();
-    window.location.replace(window.location.origin + window.location.pathname);
+   	window.location.replace(window.location.origin + window.location.pathname);
   }
   
 	return (
@@ -27,7 +28,7 @@ function Header(props) {
           <>
             <div className="account-info">
             <span className="account-id">{props.accountId}</span>
-            <span className="balance">Balance: $1000</span>
+            <span className="balance">Balance: {props.account ? props.account.amount : null}</span>
             </div>
             <button onClick={signOut} className="login-button">Logout</button>
           </>

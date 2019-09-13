@@ -5,11 +5,13 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
 mod binary_market;
+
 pub type BinaryMarket = binary_market::BinaryMarket;
 
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Markets {
+	// TODO:Make mapping of BST for by unique market id instead of by Vec index
 	active_markets: Vec<BinaryMarket>,
 }
 
@@ -29,12 +31,9 @@ impl Markets {
 		return true;
 	}
 
-	pub fn get_all_markets(&self) -> &Vec<BinaryMarket> { 
-		return &self.active_markets;
-	}
-
-	pub fn get_market(&mut self, id: u64) -> &mut BinaryMarket {
-		return &mut self.active_markets[id as usize];
+	pub fn delete_market(&mut self, id: u64) -> bool {
+		self.active_markets.remove(id as usize);
+		return true;
 	}
 
 	pub fn place_order(&mut self, market_id: u64, outcome: u64, amount: u64, price: u64) -> bool {
@@ -43,13 +42,27 @@ impl Markets {
 		return true;
 	}
 
-	pub fn delete_market(&mut self, id: u64) -> bool {
-		self.active_markets.remove(id as usize);
+	pub fn resolute(&mut self, market_id: u64, payout: Vec<u64>, invalid: bool) -> bool {
+		let market = &mut self.active_markets[market_id as usize];
+		market.resolute(payout, invalid);
 		return true;
 	}
 
-}
+	pub fn claim_earnings(&mut self, market_id: u64) -> bool {
+		let market = &mut self.active_markets[market_id as usize];
+		return market.claim_earnings();
+	}
 
+	pub fn get_all_markets(&self) -> &Vec<BinaryMarket> { 
+		return &self.active_markets;
+	}
+
+	pub fn get_market(&mut self, id: u64) -> &mut BinaryMarket {
+		return &mut self.active_markets[id as usize];
+	}
+
+
+}
 
 #[cfg(feature = "env_test")]
 #[cfg(test)]
@@ -86,11 +99,16 @@ mod tests {
 
 		// Testing binary tree
 		let order_1 = contract.place_order(0, 0, 100000, 50);
-		let order_2 = contract.place_order(0, 0, 100000, 50);
-		let order_3 = contract.place_order(0, 0, 100000, 50);
+		// let order_2 = contract.place_order(0, 0, 100000, 50);
+		// let order_3 = contract.place_order(0, 0, 100000, 50);
 
-		let order_4 = contract.place_order(0, 1, 100000, 50);
-		let order_5 = contract.place_order(0, 1, 100000, 50);
+		// let order_4 = contract.place_order(0, 1, 100000, 50);
+		// let order_5 = contract.place_order(0, 1, 100000, 50);
+		let markets = contract.get_all_markets();
+		println!("{:?}", markets);
+
+		let markets = contract.resolute(0, vec![10000, 0], false);
+
 
 		// assert_eq!(market.resolute(vec![5000, 5000], true), true);
 
