@@ -12,7 +12,7 @@ pub mod orderbook;
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct BinaryMarket {
 	pub orderbooks: BTreeMap<u64, orderbook::Orderbook>,
-	pub order_ids_by_account_id: BTreeMap<Vec<u8>, Vec<Vec<u8>>>,
+	pub order_ids_by_account_id: BTreeMap<u64, Vec<Vec<u8>>>,
 	pub creator: Vec<u8>,
 	pub outcomes: u64,
 	pub description: String,
@@ -88,15 +88,15 @@ impl BinaryMarket {
 		return true;
 	}
 	
-	fn cancel_order(&mut self, outcome: u64, order_id: &Vec<u8> ) -> bool{
+	fn cancel_order(&mut self, outcome: u64, order_id: &u64 ) -> bool{
 		if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {
-			orderbook.get_mut().remove(order_id);
+			orderbook.get_mut().remove(*order_id);
 			return true;
 		}
 		return false;
 	}
 
-	fn get_order(&self, outcome: u64, order_id: &Vec<u8> ) -> &orderbook::Order {
+	fn get_order(&self, outcome: u64, order_id: &u64 ) -> &orderbook::Order {
 		let orderbook = self.orderbooks.get(&outcome).unwrap();
 		return orderbook.get_order_by_id(order_id);
 	}

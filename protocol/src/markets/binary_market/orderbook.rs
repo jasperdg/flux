@@ -14,8 +14,8 @@ pub type Order = order::Order;
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Orderbook {
 	pub root: Option<Order>,
-	pub open_orders: BTreeMap<Vec<u8>, Order>,
-	pub filled_orders: BTreeMap<Vec<u8>, Order>,
+	pub open_orders: BTreeMap<u64, Order>,
+	pub filled_orders: BTreeMap<u64, Order>,
 	pub nonce: u64,
 	pub outcome_id: u64
 }
@@ -34,10 +34,10 @@ impl Orderbook {
 	pub fn add_new_order(&mut self, amount: u64, price: u64, amount_filled: u64) -> bool {
 		let order_id = self.to_order_id();
 		let outcome = self.outcome_id;
-		let mut prev_id: Option<Vec<u8>> = None;
-		let mut better_order_id: Option<Vec<u8>> = None;
-		let mut worse_order_id: Option<Vec<u8>> = None;
-		let mut order = &mut Order::new(env::signer_account_pk(), self.outcome_id, order_id.to_vec(), amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
+		let mut prev_id: Option<u64> = None;
+		let mut better_order_id: Option<u64> = None;
+		let mut worse_order_id: Option<u64> = None;
+		let mut order = &mut Order::new(env::signer_account_pk(), self.outcome_id, order_id, amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
 
 		if amount == amount_filled {
 			self.add_filled_order(order);
@@ -48,7 +48,7 @@ impl Orderbook {
 	}
 
 	pub fn add_filled_order(&mut self, order: &mut Order) -> Order {
-		self.filled_orders.insert(order.id.to_vec(), order.to_owned());
+		self.filled_orders.insert(order.id, order.to_owned());
 		return order.to_owned();
 	}
 
@@ -58,16 +58,16 @@ impl Orderbook {
 		if is_first_order {
 			order.prev = None;
 			self.root = Some(order.clone());
-			self.open_orders.insert(order.id.to_vec(), order.clone());
+			self.open_orders.insert(order.id, order.clone());
 			return order.to_owned();
 		}
 
 		let order_parent_id = self.descend_tree_for_parent(order.price);
-		self.open_orders.entry(order_parent_id.to_vec()).and_modify(|parent_order| {
+		self.open_orders.entry(order_parent_id).and_modify(|parent_order| {
 			if order.price > parent_order.price {
-				parent_order.better_order_id = Some(order.id.to_vec());
+				parent_order.better_order_id = Some(order.id);
 			} else {
-				parent_order.worse_order_id = Some(order.id.to_vec());
+				parent_order.worse_order_id = Some(order.id);
 			}
 		});
 
@@ -75,25 +75,25 @@ impl Orderbook {
 			self.root = Some(self.open_orders.get(&order_parent_id).unwrap().to_owned());
 		}
 		
-		order.prev = Some(order_parent_id.to_vec());
-		self.open_orders.insert(order.id.to_vec(), order.clone());
+		order.prev = Some(order_parent_id);
+		self.open_orders.insert(order.id, order.clone());
 		return order.to_owned();
 	}
 
-	pub fn remove(&mut self, order_id: &Vec<u8>) -> &bool {
-		let mut order = self.open_orders.get(order_id).unwrap().to_owned();
-		self.open_orders.remove(order_id);
+	pub fn remove(&mut self, order_id: u64) -> &bool {
+		let mut order = self.open_orders.get(&order_id).unwrap().to_owned();
+		self.open_orders.remove(&order_id);
 		let has_parent_order_id = !order.prev.is_none();
 		let has_worse_order_id = !order.worse_order_id.is_none();
 		let has_better_order_id = !order.better_order_id.is_none();
 
 		if has_parent_order_id {
-			let parent_order_id = order.prev.as_ref().unwrap().to_vec();
-			self.open_orders.entry(parent_order_id).and_modify(|parent_order| {
-				if order_id == parent_order.worse_order_id.as_ref().unwrap_or(&Vec::new()) {
+			let parent_order_id = order.prev.as_ref().unwrap();
+			self.open_orders.entry(*parent_order_id).and_modify(|parent_order| {
+				if &order_id == parent_order.worse_order_id.as_ref().unwrap_or(&0) {
 					parent_order.worse_order_id = None;
 				} 
-				else if order_id == parent_order.better_order_id.as_ref().unwrap_or(&Vec::new()) {
+				else if &order_id == parent_order.better_order_id.as_ref().unwrap_or(&0) {
 					parent_order.better_order_id = None;
 				} 
 				else {
@@ -119,24 +119,24 @@ impl Orderbook {
 		return &true;
 	}
 
-	pub fn descend_tree_for_parent(&mut self, price: u64) -> Vec<u8> {
+	pub fn descend_tree_for_parent(&mut self, price: u64) -> u64 {
 		let root = self.root.as_ref().unwrap();
-		let mut current_order_id = root.id.to_vec();
-		let mut next_order_id: Option<&Vec<u8>> = self.get_next_order(&current_order_id, price);
+		let mut current_order_id = root.id;
+		let mut next_order_id: Option<&u64> = self.get_next_order(&current_order_id, price);
 		while !next_order_id.is_none() {
-			current_order_id = next_order_id.as_ref().unwrap().to_vec();
+			current_order_id = *next_order_id.unwrap();
 			next_order_id = self.get_next_order(&current_order_id, price);
 		}
 	
 		return current_order_id;
 	}
 
-	pub fn get_open_orders(&self) -> &BTreeMap<Vec<u8>, Order> {
+	pub fn get_open_orders(&self) -> &BTreeMap<u64, Order> {
 		return &self.open_orders;
 	}
 
-	pub fn get_next_order(&mut self, current_order_id: &Vec<u8>, new_order_price: u64) -> Option<&Vec<u8>> {
-		let current_order = self.open_orders.get(&current_order_id.to_vec()).unwrap();
+	pub fn get_next_order(&mut self, current_order_id: &u64, new_order_price: u64) -> Option<&u64> {
+		let current_order = self.open_orders.get(&current_order_id).unwrap();
 		if new_order_price <= current_order.price {
 			return current_order.worse_order_id.as_ref();
 		} else {
@@ -144,17 +144,12 @@ impl Orderbook {
 		}
 	}
 
-	pub fn to_order_id(&mut self) -> Vec<u8> {
-		let mut outcome = vec![];
-		outcome.write_u64::<BigEndian>(self.outcome_id).unwrap();
-		let mut nonce = vec![];
-		nonce.write_u64::<BigEndian>(self.nonce).unwrap();
-		let order_id = [outcome, nonce, env::signer_account_pk()].concat();
+	pub fn to_order_id(&mut self) -> u64 {
 		self.nonce += 1;
-		return order_id;
+		return self.nonce;
 	}
 
-	pub fn get_order_by_id(&self, id: &Vec<u8>) -> &Order {
+	pub fn get_order_by_id(&self, id: &u64) -> &Order {
 		return self.open_orders.get(id).unwrap();
 	}
 
@@ -168,7 +163,7 @@ impl Orderbook {
 
 		while match_exists && total_filled < amount {
 			let matching_order_id = match_optional.unwrap();
-			self.open_orders.entry(matching_order_id.to_vec()).and_modify(|matching_order| {
+			self.open_orders.entry(matching_order_id).and_modify(|matching_order| {
 				let match_amount_fillable = matching_order.amount - matching_order.amount_filled;
 				if match_amount_fillable == to_fill {
 					total_filled += to_fill;
@@ -189,9 +184,9 @@ impl Orderbook {
 			});
 
 			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
-			self.filled_orders.insert(matching_order_id.to_vec(), matching_order_after_fill.clone());
+			self.filled_orders.insert(matching_order_id, matching_order_after_fill.clone());
 			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
-				assert_eq!(self.remove(&matching_order_id), &true);
+				assert_eq!(self.remove(matching_order_id), &true);
 			}
 			root = self.root.as_ref().unwrap();
 			match_optional = self.find_order_by_price(&root, price);
@@ -200,9 +195,9 @@ impl Orderbook {
 		return total_filled;
 	}
 
-	pub fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<Vec<u8>> {
+	pub fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
 		if current_order.price == target_price {
-			return Some(current_order.id.to_vec());
+			return Some(current_order.id);
 		}
 		else if current_order.price < target_price && !current_order.better_order_id.is_none() {
 			let next_order_id = current_order.better_order_id.as_ref().unwrap();
