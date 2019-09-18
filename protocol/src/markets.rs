@@ -96,30 +96,27 @@ mod tests {
 
     #[test]
 	fn test_market_creation() {
-		let mut context = get_context(5000000);
+		let mut context = get_context(500000000);
 		let config = Config::default();
 		testing_env!(context, config);
 		let mut contract = Markets::new();
 		contract.create_market(2, "will x happen by T".to_string(), 123);
 
 		// Testing binary tree
-		let order_1 = contract.place_order(0, 0, 100000, 50);
-		let order_2 = contract.place_order(0, 0, 100000, 50);
-		let order_3 = contract.place_order(0, 0, 100000, 50);
-
-		let order_4 = contract.place_order(0, 1, 100000, 50);
-		let order_5 = contract.place_order(0, 1, 100000, 50);
-		let order_6 = contract.place_order(0, 1, 100000, 50);
+		let order_1 = contract.place_order(0, 0, 100000, 40);
+		let order_4 = contract.place_order(0, 1, 100000, 60);
+		// let order_5 = contract.place_order(0, 1, 100000, 50);
+		// let order_6 = contract.place_order(0, 1, 100000, 50);
 		// let markets = contract.get_all_markets();
 		// println!("{:?}", markets);
 
 		// let markets = contract.resolute(0, vec![10000, 0], false);
 
-		// let yes_market_order = contract.get_market_order(0, 0); 
-		// let no_market_order = contract.get_market_order(0, 1); 
-
-		// println!("{:?}", yes_market_order);
-		// println!("{:?}", no_market_order);
+		let yes_market_order = contract.get_market_order(0, 0); 
+		let no_market_order = contract.get_market_order(0, 1);
+		println!("{:?}", yes_market_order);
+		assert!(yes_market_order.is_none());
+		assert!(no_market_order.is_none());
 
 		// assert_eq!(market.resolute(vec![5000, 5000], true), true);
 

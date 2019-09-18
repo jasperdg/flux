@@ -48,7 +48,6 @@ impl Orderbook {
 		let updated_order = self.add_order(order);
 
 		let market_order = self.get_market_order();
-
 		if !self.market_order.is_none() && updated_order.price > market_order.unwrap().price {
 			self.market_order = Some(updated_order.id);
 		} 
@@ -193,28 +192,32 @@ impl Orderbook {
 					matching_order.amount_filled += match_amount_fillable;
 					to_fill -= match_amount_fillable;
 				}
-
 			});
+
 
 			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
 			self.filled_orders.insert(matching_order_id, matching_order_after_fill.clone());
 
 			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
 				assert_eq!(self.remove(matching_order_id), &true);
-
 				if !self.market_order.is_none() && self.market_order.unwrap() == matching_order_id {
 					let new_market_order =  self.get_new_market_order(None);
-					if !new_market_order.is_none() {
+					if new_market_order.is_none() {
 						self.market_order = None;
 					}
 					else {
 						self.market_order = Some(new_market_order.unwrap().id);
 					}
 				}
+
 			}
-			root = self.root.as_ref().unwrap();
-			match_optional = self.find_order_by_price(&root, price);
-			match_exists = !match_optional.is_none();
+
+			if !self.root.is_none() {
+				root = self.root.as_ref().unwrap();
+				match_optional = self.find_order_by_price(&root, price);
+				match_exists = !match_optional.is_none();
+			}
+			match_exists = false;
 		}
 		return total_filled;
 	}
@@ -237,9 +240,7 @@ impl Orderbook {
 	}
 
 	pub fn get_market_order(&self) -> Option<&Order> {
-		println!("market order: {:?}", self.market_order );
 		if !self.market_order.is_none() {
-			println!("market: {:?}", self.open_orders.get(&self.market_order.unwrap()) );
 			return Some(self.open_orders.get(&self.market_order.unwrap()).unwrap());
 		} else {
 			return None
