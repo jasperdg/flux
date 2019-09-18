@@ -20,7 +20,7 @@ class Markets extends Component {
   }
 
   render() {
-    const { deleteMarket, contract, placeOrder } = this.props;
+    const { deleteMarket, placeOrder, resolute, claimEarnings, getMarketOrder } = this.props;
     
     return (
       <div id="markets-view">
@@ -34,7 +34,15 @@ class Markets extends Component {
               this.props.markets.map((market, i) => {
                 return (
                   <Slide key={i} index={i}>
-                    <Market contract={contract} index={i} market={market} placeOrder={placeOrder} deleteMarket={deleteMarket}/>                
+                    <Market 
+                    index={i} 
+                    market={market}
+                    getMarketOrder={getMarketOrder}
+                    placeOrder={placeOrder} 
+                    deleteMarket={deleteMarket}
+                    resolute={resolute}
+                    claimEarnings={claimEarnings}
+                    />                
                   </Slide>
                 );
               })

@@ -5,8 +5,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
 mod binary_market;
-
 pub type BinaryMarket = binary_market::BinaryMarket;
+pub type Order = binary_market::orderbook::order::Order;
 
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
@@ -36,7 +36,10 @@ impl Markets {
 		return true;
 	}
 
+	// TODO: Can't seem to fill the root order.
 	pub fn place_order(&mut self, market_id: u64, outcome: u64, amount: u64, price: u64) -> bool {
+		let total_price = amount * price;
+		assert!(total_price as u128 <= env::attached_deposit());
 		let market = &mut self.active_markets[market_id as usize];
 		market.place_order(outcome, amount, price);
 		return true;
@@ -57,11 +60,13 @@ impl Markets {
 		return &self.active_markets;
 	}
 
-	pub fn get_market(&mut self, id: u64) -> &mut BinaryMarket {
-		return &mut self.active_markets[id as usize];
+	pub fn get_market(&self, id: u64) -> &BinaryMarket {
+		return &self.active_markets[id as usize];
 	}
 
-
+	pub fn get_market_order(&self, market_id: usize, outcome: u64)  -> Option<&Order> {
+		return  self.active_markets[market_id].orderbooks[&outcome].get_market_order();
+	}
 }
 
 #[cfg(feature = "env_test")]
@@ -99,16 +104,22 @@ mod tests {
 
 		// Testing binary tree
 		let order_1 = contract.place_order(0, 0, 100000, 50);
-		// let order_2 = contract.place_order(0, 0, 100000, 50);
-		// let order_3 = contract.place_order(0, 0, 100000, 50);
+		let order_2 = contract.place_order(0, 0, 100000, 50);
+		let order_3 = contract.place_order(0, 0, 100000, 50);
 
-		// let order_4 = contract.place_order(0, 1, 100000, 50);
-		// let order_5 = contract.place_order(0, 1, 100000, 50);
-		let markets = contract.get_all_markets();
-		println!("{:?}", markets);
+		let order_4 = contract.place_order(0, 1, 100000, 50);
+		let order_5 = contract.place_order(0, 1, 100000, 50);
+		let order_6 = contract.place_order(0, 1, 100000, 50);
+		// let markets = contract.get_all_markets();
+		// println!("{:?}", markets);
 
-		let markets = contract.resolute(0, vec![10000, 0], false);
+		// let markets = contract.resolute(0, vec![10000, 0], false);
 
+		// let yes_market_order = contract.get_market_order(0, 0); 
+		// let no_market_order = contract.get_market_order(0, 1); 
+
+		// println!("{:?}", yes_market_order);
+		// println!("{:?}", no_market_order);
 
 		// assert_eq!(market.resolute(vec![5000, 5000], true), true);
 

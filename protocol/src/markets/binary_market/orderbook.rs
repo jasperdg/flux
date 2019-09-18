@@ -6,8 +6,8 @@ use std::panic;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use near_bindgen::{near_bindgen, env};
-mod order;
 
+pub mod order;
 pub type Order = order::Order;
 
 #[near_bindgen]
@@ -16,6 +16,7 @@ pub struct Orderbook {
 	pub root: Option<Order>,
 	pub open_orders: BTreeMap<u64, Order>,
 	pub filled_orders: BTreeMap<u64, Order>,
+	pub market_order: Option<u64>,
 	pub nonce: u64,
 	pub outcome_id: u64
 }
@@ -26,6 +27,7 @@ impl Orderbook {
 			root: None,
 			open_orders: BTreeMap::new(),
 			filled_orders: BTreeMap::new(),
+			market_order: None,
 			nonce: 0,
 			outcome_id: outcome,
 		}
@@ -37,13 +39,23 @@ impl Orderbook {
 		let mut prev_id: Option<u64> = None;
 		let mut better_order_id: Option<u64> = None;
 		let mut worse_order_id: Option<u64> = None;
-		let mut order = &mut Order::new(env::signer_account_pk(), self.outcome_id, order_id, amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
+		let mut order = &mut Order::new(env::current_account_id(), self.outcome_id, order_id, amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
 
 		if amount == amount_filled {
 			self.add_filled_order(order);
 			return true;
 		} 
-		self.add_order(order);
+		let updated_order = self.add_order(order);
+
+		let market_order = self.get_market_order();
+
+		if !self.market_order.is_none() && updated_order.price > market_order.unwrap().price {
+			self.market_order = Some(updated_order.id);
+		} 
+		else if self.market_order.is_none() {
+			self.market_order = Some(updated_order.id);
+		}
+
 		return true
 	}
 
@@ -59,6 +71,7 @@ impl Orderbook {
 			order.prev = None;
 			self.root = Some(order.clone());
 			self.open_orders.insert(order.id, order.clone());
+			self.market_order = Some(order.id);
 			return order.to_owned();
 		}
 
@@ -185,8 +198,19 @@ impl Orderbook {
 
 			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
 			self.filled_orders.insert(matching_order_id, matching_order_after_fill.clone());
+
 			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
 				assert_eq!(self.remove(matching_order_id), &true);
+
+				if !self.market_order.is_none() && self.market_order.unwrap() == matching_order_id {
+					let new_market_order =  self.get_new_market_order(None);
+					if !new_market_order.is_none() {
+						self.market_order = None;
+					}
+					else {
+						self.market_order = Some(new_market_order.unwrap().id);
+					}
+				}
 			}
 			root = self.root.as_ref().unwrap();
 			match_optional = self.find_order_by_price(&root, price);
@@ -212,10 +236,21 @@ impl Orderbook {
 		return None;
 	}
 
-	pub fn get_market_order(&self, last_order: Option<&Order>) -> Order {
+	pub fn get_market_order(&self) -> Option<&Order> {
+		println!("market order: {:?}", self.market_order );
+		if !self.market_order.is_none() {
+			println!("market: {:?}", self.open_orders.get(&self.market_order.unwrap()) );
+			return Some(self.open_orders.get(&self.market_order.unwrap()).unwrap());
+		} else {
+			return None
+		}
+	}
+
+	fn get_new_market_order(&self, last_order: Option<&Order>) -> Option<Order> {
 		let mut current_order: &Order;
 
 		if last_order.is_none() {
+			if self.root.is_none() {return None}
 			current_order = &self.root.as_ref().unwrap();
 		}
 		else {
@@ -223,16 +258,16 @@ impl Orderbook {
 		}
 
 		if current_order.better_order_id.is_none() {
-			return current_order.clone();
+			return Some(current_order.clone());
 		} else {
 			let next_order_id = current_order.better_order_id.as_ref().unwrap();
-			let next_order = self.open_orders.get(next_order_id).unwrap();
-			return self.get_market_order(Some(next_order));
+			let next_order = self.open_orders.get(next_order_id);
+			return Some(self.get_new_market_order(next_order).unwrap());
 		}
 	}
 
 	pub fn get_and_remove_owed_to_user(&mut self) -> u64{
-		let sender = env::signer_account_pk();
+		let sender = env::current_account_id();
 		let mut total_owed = 0;
 		for (i, filled_order) in self.filled_orders.to_owned() {
 			if (filled_order.owner == sender) {

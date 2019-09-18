@@ -12,12 +12,11 @@ pub mod orderbook;
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct BinaryMarket {
 	pub orderbooks: BTreeMap<u64, orderbook::Orderbook>,
-	pub order_ids_by_account_id: BTreeMap<u64, Vec<Vec<u8>>>,
-	pub creator: Vec<u8>,
+	pub creator: String,
 	pub outcomes: u64,
 	pub description: String,
 	pub end_time: u64,
-	pub oracle_address: Vec<u8>,
+	pub oracle_address: String,
 	pub payout: Option<Vec<u64>>,
 	pub invalid: Option<bool>,
 	pub resoluted: bool
@@ -27,12 +26,11 @@ impl BinaryMarket {
 	pub fn new(outcomes: u64, description: String, end_time: u64) -> Self {
 		Self {
 			orderbooks: BTreeMap::new(),
-			order_ids_by_account_id:  BTreeMap::new(),
-			creator: env::signer_account_pk(),
+			creator: env::current_account_id(),
 			outcomes,
 			description,
 			end_time, // in one day
-			oracle_address: env::signer_account_pk(),
+			oracle_address: env::current_account_id(),
 			payout: None,
 			invalid: None,
 			resoluted: false
@@ -42,7 +40,7 @@ impl BinaryMarket {
 	pub fn resolute(&mut self, payout: Vec<u64>, invalid: bool) -> bool {
 		// TODO: Make sure market can only be resoluted after end time
 		assert_eq!(self.resoluted, false);
-		assert_eq!(env::signer_account_pk(), self.creator);
+		assert_eq!(env::current_account_id(), self.creator);
 		assert_eq!(payout.len(), 2);
 		assert!(self.is_valid_payout(&payout, &invalid));
 		self.payout = Some(payout);
@@ -74,8 +72,6 @@ impl BinaryMarket {
 
 	pub fn place_order(&mut self, outcome: u64, amount: u64, price: u64) -> bool {
 		assert_eq!(self.resoluted, false);
-		let total_cost = amount * price;
-		// assert!(env::attached_deposit() >= total_cost as u128);
 		let mut amount_to_fill = amount;
 		let inverse_outcome = if outcome == 0 {1} else {0};
 		let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(orderbook::Orderbook::new(outcome));
@@ -101,9 +97,8 @@ impl BinaryMarket {
 		return orderbook.get_order_by_id(order_id);
 	}
 
-	fn get_market_order(&self, outcome: u64) -> orderbook::Order {
-		let orderbook = self.orderbooks.get(&outcome).unwrap();
-		return orderbook.get_market_order(None);
-	}
+	// pub fn get_market_order(&self, outcome: u64) -> orderbook::Order {
+	// 	// return self.orderbooks.get(&outcome).unwrap().get_market_order(None);
+	// }
 	
 }

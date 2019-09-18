@@ -8,7 +8,7 @@ use std::time::SystemTime;
 #[derive(Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Clone)]
 pub struct Order {
 	pub id: u64,
-	pub owner: Vec<u8>,
+	pub owner: String,
 	pub outcome: u64,
 	pub amount: u64,
 	pub price: u64,
@@ -20,7 +20,7 @@ pub struct Order {
 
 
 impl Order {
-	pub fn new(owner: Vec<u8>, outcome: u64, id: u64, amount: u64, price: u64, amount_filled: u64, prev: Option<u64>, better_order_id: Option<u64>, worse_order_id: Option<u64>) -> Self {
+	pub fn new(owner: String, outcome: u64, id: u64, amount: u64, price: u64, amount_filled: u64, prev: Option<u64>, better_order_id: Option<u64>, worse_order_id: Option<u64>) -> Self {
 		Order {
 			id,
 			owner,

@@ -13,8 +13,8 @@
 	padding: 0;
 	list-style: none;
 	cursor: default;
-	justify-content: space-between;
-	width: 120px;
+	justify-content: space-around;
+	max-width: 120px;
 }
 
 .dots-ul li {

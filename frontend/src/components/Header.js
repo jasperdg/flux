@@ -2,7 +2,6 @@ import React from 'react';
 import '../styles/header.css';
 import fluxLogo from '../assets/flux-logo.png';
 
-
 function Header(props) {
 
 	function signIn() {
@@ -15,20 +14,24 @@ function Header(props) {
 	function signOut() {
 		props.walletAccount.signOut();
    	window.location.replace(window.location.origin + window.location.pathname);
-  }
+	}
+	
+	function toDollars(num) {
+		return `$${(num / 10 ** 10).toFixed(2)}`
+	}
   
 	return (
 		<header className="App-header">
-		  <img  id="header-logo" src={fluxLogo} alt="our company logo"/>
+		  <img onClick={props.createMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
 		  {
 			  props.isSignedIn === false 	? 
 			  <button onClick={signIn} className="login-button">Login</button>
-			  							              :
+											:
 			  (
           <>
             <div className="account-info">
-            <span className="account-id">{props.accountId}</span>
-            <span className="balance">Balance: {props.account ? props.account.amount : null}</span>
+            <span className="account-id">{props.account ? props.account.accountId : null}</span>
+            <span className="balance">{props.account ? `${toDollars(props.accountState.amount)}` : null}</span>
             </div>
             <button onClick={signOut} className="login-button">Logout</button>
           </>

@@ -3,6 +3,7 @@ import Markets from './Markets';
 import '../styles/App.css';
 import Header from './Header';
 import SplashScreen from './SplashScreen';
+import BN from 'bn.js';
 
 class App extends Component {
   state = {
@@ -14,7 +15,7 @@ class App extends Component {
     markets: [],
     showMarkets: true,
     account: null,
-    accountState: null
+    accountState: null,
     // loading: true
   }
 
@@ -24,11 +25,10 @@ class App extends Component {
     const accountId = walletAccount.getAccountId();
     const isSignedIn = walletAccount.isSignedIn();
     const contract = await near.loadContract(window.nearConfig.contractName, {
-      viewMethods: ["get_all_markets", "get_market"],
+      viewMethods: ["get_all_markets", "get_market", "get_market_order"],
       changeMethods: ["create_market", "delete_market", "place_order", "resolute_market", "claim_earnings"],
       sender: accountId,
     });
-
 
     let account = null;
     let accountState = null;
@@ -38,15 +38,15 @@ class App extends Component {
       accountState = await account.state();
     }
     
-    // const markets = await contract.get_all_markets();
-    // console.log(markets);
+    const markets = await contract.get_all_markets();
+
     this.setState({
       near,
       walletAccount,
       accountId,
       contract,
       isSignedIn,
-      // markets,
+      markets,
       account,
       accountState
     });
@@ -61,34 +61,50 @@ class App extends Component {
     this.setState({markets});
   }
 
+  // TODO: Create wrapper contract for all contract methods,
   createMarket = async () => {
-    await this.state.contract.create_market({outcomes: 2,description: "will x happen by T", end_time: 123412341234});
+    await this.state.account.functionCall(
+      window.nearConfig.contractName,
+      "create_market",
+      {
+        outcomes: 2,
+        description: "will x happen by T", 
+        end_time: new Date().getTime() + 120000000
+      },
+      95344531,
+    );
     this.getAndUpdateMarkets();
   }
 
   deleteMarket = async (id) => {
-    await this.state.contract.delete_market({id: id});
+    await this.state.account.functionCall(
+      window.nearConfig.contractName,
+      "delete_market",
+      {id},
+      95344531
+    );
     this.getAndUpdateMarkets();
   }
 
 
   placeOrder = async (marketId, outcome, amount, price) => {
-    console.log(this.state.contract);
     const res = await this.state.account.functionCall(
       window.nearConfig.contractName, 
       "place_order", 
       {
-        market_id: 0, 
-        outcome: 1, 
-        amount: 100000, 
-        price: 50
+        market_id: marketId, 
+        outcome: outcome, 
+        amount: amount, 
+        price: price
       },
-      95344531
+      95344531,
+      new BN(amount * price)
     );
-    console.log("RESPONSE:" , res)
+    this.getAndUpdateMarkets();
+    console.log(res);
   }
 
-  resoluteMarket = async (marketId, outcome, amount, price) => {
+  resoluteMarket = async (marketId, payout, invalid) => {
     const res = await this.state.account.functionCall(
       window.nearConfig.contractName, 
       "resolute", 
@@ -100,34 +116,60 @@ class App extends Component {
       95344531
     );
     console.log("RESPONSE:" , res)
+
   }
 
-  claimEarnings = async (marketId, outcome, amount, price) => {
+  claimEarnings = async (marketId) => {
     const res = await this.state.account.functionCall(
       window.nearConfig.contractName, 
       "claim_earnings", 
       {
-        market_id: 0
+        market_id: marketId
       },
       95344531
     );
     console.log("RESPONSE:" , atob(res.transactions[1].result.result));
   }
 
+  getMarketOrder = (marketId, outcome) => {
+    return new Promise( async (resolve, reject) => {
+      try {
+        const res = await this.state.contract.get_market_order({ market_id: marketId, outcome: outcome });
+        resolve(res);
+      } 
+      catch {
+        console.log("no market orders");
+        resolve(null);
+      }
+    });
+  }
+
 
   render() {
-    console.log(this.state.account);
+
     return (
       <div className="App">
-        <button onClick={this.createMarket}> hi</button>
-        <button onClick={this.getAndUpdateMarkets}> bye</button>
-        <button onClick={this.placeOrder}> slye</button>
-        <button onClick={this.resoluteMarket}> rye</button>
-        <button onClick={this.claimEarnings}> cye</button>
 
         {this.state.loading && <SplashScreen />}
-        <Header account={this.state.accountState} isSignedIn={this.state.isSignedIn} walletAccount={this.state.walletAccount}/>
-        {this.state.showMarkets ? <Markets placeOrder={this.placeOrder} deleteMarket={this.deleteMarket} contract={this.state.contract} markets={this.state.markets}/> : null}
+        <Header
+          createMarket={this.createMarket}
+          account={this.state.account}
+          accountState={this.state.accountState}
+          isSignedIn={this.state.isSignedIn} 
+          walletAccount={this.state.walletAccount}
+        />
+        {
+          this.state.showMarkets 
+          ? 
+          <Markets 
+          getMarketOrder={this.getMarketOrder}
+          resolute={this.resoluteMarket}
+          claimEarnings={this.claimEarnings}
+          placeOrder={this.placeOrder} 
+          deleteMarket={this.deleteMarket} 
+          markets={this.state.markets}/> 
+          : null
+        }
       </div>
     );
   }
