@@ -13,7 +13,7 @@ class Market extends Component {
     this.state = {
       orderType: "market",
       limitPrice: 50,
-      spend: 1000000000,
+      spend: 0,
       marketNoOrder: null,
       marketYesOrder: null
     }
@@ -51,13 +51,14 @@ class Market extends Component {
     if (orderType === "limit") {
       return parseInt(limitPrice)
     }
-    else if (position === 0) return parseInt(this.state.marketNoOrder.price);
-    else return parseInt(this.state.marketYesOrder.price);
+    else if (position === 0) return parseInt(100 - this.state.marketNoOrder.price);
+    else return parseInt(100 - this.state.marketYesOrder.price);
   }
 
   placeOrder = (outcome) => {
     const { placeOrder, index } = this.props;
-    const { spend } = this.state;
+    let spend = this.state.spend;
+    spend = spend * 10000;
     const price = this.getPrice(outcome);
     console.log(typeof price, spend);
     if (placeOrder) {
@@ -104,7 +105,7 @@ class Market extends Component {
           market.resoluted === false &&
           <>
             <div className="order-type-toggle-section">
-              <label>{ this.state.orderType === "limit" ? "Limit order" : "Market order"}</label>
+              <label onClick={this.deleteMarket}>{ this.state.orderType === "limit" ? "Limit order" : "Market order"}</label>
               <Switch 
                 checkedIcon={false} 
                 uncheckedIcon={false}
@@ -178,7 +179,6 @@ class Market extends Component {
             </form>
           </>
         }
-      <button onClick={this.deleteMarket}>Delete</button>
       </div>
     );
   }

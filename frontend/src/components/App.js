@@ -88,6 +88,7 @@ class App extends Component {
 
 
   placeOrder = async (marketId, outcome, amount, price) => {
+    console.log(marketId, outcome, amount, price);
     const res = await this.state.account.functionCall(
       window.nearConfig.contractName, 
       "place_order", 
