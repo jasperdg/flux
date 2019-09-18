@@ -3,25 +3,43 @@ import Markets from './Markets';
 import '../styles/App.css';
 import Header from './Header';
 import SplashScreen from './SplashScreen';
+import LandingPage from './LandingPage';
 import BN from 'bn.js';
+import Loader from './Loader';
+import { throws } from 'assert';
 
 class App extends Component {
-  state = {
-    near: null,
-    walletAccount: null,
-    accountId: null,
-    contract: null,
-    isSignedIn: null,
-    markets: [],
-    showMarkets: true,
-    account: null,
-    accountState: null,
-    // loading: true
-  }
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      near: null,
+      walletAccount: null,
+      accountId: null,
+      contract: null,
+      isSignedIn: null,
+      markets: [],
+      showMarkets: true,
+      account: null,
+      accountState: null,
+      isRightUrl:false,
+      txLoading: false,
+      txRes: null
+      // loading: true
+    }
+  }
+  
   async componentDidMount() {
+    console.log(window.location.origin);
+    if (process.env.NODE_ENV === 'production' && window.location.origin === "https://demo.flux.market") {
+      console.log("doing this");
+      this.setState({isRightUrl: true});
+    } else if(process.env.NODE_ENV === 'development'){
+      this.setState({isRightUrl: true});
+    }
     const near = await window.nearlib.connect(Object.assign({ deps: { keyStore: new window.nearlib.keyStores.BrowserLocalStorageKeyStore() } }, window.nearConfig));
     const walletAccount = new window.nearlib.WalletAccount(near);
+
     const accountId = walletAccount.getAccountId();
     const isSignedIn = walletAccount.isSignedIn();
     const contract = await near.loadContract(window.nearConfig.contractName, {
@@ -32,12 +50,15 @@ class App extends Component {
 
     let account = null;
     let accountState = null;
-
+    let contractState = null;
     if (isSignedIn) {
       account = await near.account(walletAccount.getAccountId());
+      contractState = await near.account(window.nearConfig.contractName);
       accountState = await account.state();
     }
     
+    console.log(contractState);
+
     const markets = await contract.get_all_markets();
 
     this.setState({
@@ -51,29 +72,48 @@ class App extends Component {
       accountState
     });
 
-    // setTimeout(() => {
-    //   this.setState({loading: false});
-    // }, 2000)
+    setTimeout(() => {
+      this.setState({loading: false});
+    }, 2000)
+  }
+
+  startLoader = () => {
+    this.setState({txLoading: true});
+  }
+
+  endLoader = (res) => {
+    this.setState({txRes: res});
+    setTimeout( () => this.setState({
+      txLoading: false,
+      txRes: null
+    }), 1000)
   }
 
   getAndUpdateMarkets = async () => {
     const markets = await this.state.contract.get_all_markets();
+    console.log(markets);
     this.setState({markets});
   }
 
   // TODO: Create wrapper contract for all contract methods,
   createMarket = async () => {
-    await this.state.account.functionCall(
-      window.nearConfig.contractName,
-      "create_market",
-      {
-        outcomes: 2,
-        description: "will x happen by T", 
-        end_time: new Date().getTime() + 120000000
-      },
-      95344531,
-    );
-    this.getAndUpdateMarkets();
+    this.startLoader();
+    try{
+      await this.state.account.functionCall(
+        window.nearConfig.contractName,
+        "create_market",
+        {
+          outcomes: 2,
+          description: "will x happen by T", 
+          end_time: new Date().getTime() + 120000000
+        },
+        5344531,
+      );
+      this.getAndUpdateMarkets();
+      this.endLoader(true);
+    } catch {
+      this.endLoader(false);
+    }
   }
 
   deleteMarket = async (id) => {
@@ -81,30 +121,38 @@ class App extends Component {
       window.nearConfig.contractName,
       "delete_market",
       {id},
-      95344531
+      5344531
     );
     this.getAndUpdateMarkets();
   }
 
 
-  placeOrder = async (marketId, outcome, amount, price) => {
-    console.log(marketId, outcome, amount, price);
-    const res = await this.state.account.functionCall(
-      window.nearConfig.contractName, 
-      "place_order", 
-      {
-        market_id: marketId, 
-        outcome: outcome, 
-        amount: amount, 
-        price: price
-      },
-      95344531,
-      new BN(amount * price)
-    );
-    this.getAndUpdateMarkets();
-    console.log(res);
+  placeOrder =  (marketId, outcome, amount, price) => {
+    return new Promise( async (resolve, reject) => {
+      this.startLoader();
+      try {
+        const res = await this.state.account.functionCall(
+          window.nearConfig.contractName, 
+          "place_order", 
+          {
+            market_id: marketId, 
+            outcome: outcome, 
+            amount: amount, 
+            price: price
+          },
+          1344531,
+          new BN(amount * price)
+        );
+        this.getAndUpdateMarkets();
+        this.endLoader(true);
+        resolve(res);
+      } 
+      catch {
+        this.endLoader(false);
+      }
+    });
   }
-
+  
   resoluteMarket = async (marketId, payout, invalid) => {
     const res = await this.state.account.functionCall(
       window.nearConfig.contractName, 
@@ -114,22 +162,27 @@ class App extends Component {
         payout: [10000, 0],
         invalid: false
       },
-      95344531
+      5344531
     );
     console.log("RESPONSE:" , res)
-
   }
 
   claimEarnings = async (marketId) => {
-    const res = await this.state.account.functionCall(
-      window.nearConfig.contractName, 
-      "claim_earnings", 
-      {
-        market_id: marketId
-      },
-      95344531
-    );
-    console.log("RESPONSE:" , atob(res.transactions[1].result.result));
+    this.startLoader()
+    try {
+      const res = await this.state.account.functionCall(
+        window.nearConfig.contractName, 
+        "claim_earnings", 
+        {
+          market_id: marketId
+        },
+        5344531
+      );
+      this.endLoader(true);
+    }
+    catch {
+      this.endLoader(false);
+    }
   }
 
   getMarketOrder = (marketId, outcome) => {
@@ -151,26 +204,32 @@ class App extends Component {
     return (
       <div className="App">
 
-        {this.state.loading && <SplashScreen />}
-        <Header
-          createMarket={this.createMarket}
-          account={this.state.account}
-          accountState={this.state.accountState}
-          isSignedIn={this.state.isSignedIn} 
-          walletAccount={this.state.walletAccount}
-        />
-        {
-          this.state.showMarkets 
-          ? 
-          <Markets 
-          getMarketOrder={this.getMarketOrder}
-          resolute={this.resoluteMarket}
-          claimEarnings={this.claimEarnings}
-          placeOrder={this.placeOrder} 
-          deleteMarket={this.deleteMarket} 
-          markets={this.state.markets}/> 
-          : null
-        }
+        {this.state.isRightUrl ? 
+          <>
+          {this.state.txLoading && <Loader txRes={this.state.txRes}/>}
+          {this.state.loading && <SplashScreen />}
+          <Header
+            createMarket={this.createMarket}
+            account={this.state.account}
+            accountState={this.state.accountState}
+            isSignedIn={this.state.isSignedIn} 
+            walletAccount={this.state.walletAccount}
+          />
+          {
+            this.state.showMarkets 
+            ? 
+            <Markets 
+            getMarketOrder={this.getMarketOrder}
+            resolute={this.resoluteMarket}
+            claimEarnings={this.claimEarnings}
+            placeOrder={this.placeOrder} 
+            deleteMarket={this.deleteMarket} 
+            markets={this.state.markets}/> 
+            : null
+          }
+          </>
+        : <LandingPage/> }
+        
       </div>
     );
   }

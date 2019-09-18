@@ -1,0 +1,14 @@
+#splash-screen img {
+	width: 50%;
+	max-width: 250px;
+	margin: auto;
+	display: block;
+	margin-top: 30vh;
+}
+
+#splash-screen h2 {
+	text-align: center;
+	color: #310094;
+}
+
+  

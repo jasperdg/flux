@@ -9,7 +9,7 @@ import CountDownTimer from './CountDownTimer';
 class Market extends Component {
   constructor(props) {
     super(props)
-    console.log(this.props.market);
+
     this.state = {
       orderType: "market",
       limitPrice: 50,
@@ -18,19 +18,25 @@ class Market extends Component {
       marketYesOrder: null
     }
   }
-
+  componentDidUpdate = async (prevProps) => {
+    if (this.props.market.orderbooks.length > 0 && this.props.market.orderbooks[0].market_order !== prevProps.market.orderbooks[0].market_order) {
+      const marketYesOrder = await this.props.getMarketOrder(this.props.index, 0);
+      this.setState({marketYesOrder});
+    } else if (this.props.market.orderbooks.length > 1 && this.props.market.orderbooks[1].market_order !== prevProps.market.orderbooks[1].market_order) {
+      const marketNoOrder = await this.props.getMarketOrder(this.props.index, 1);
+      this.setState({marketNoOrder});
+    }
+  }
   componentDidMount = async () => {
     const { getMarketOrder, index } = this.props;
     const marketYesOrder = await getMarketOrder(index, 0);
     const marketNoOrder = await getMarketOrder(index, 1);
-    console.log(marketYesOrder, marketNoOrder);
     this.setState({marketYesOrder, marketNoOrder});
   }
 
   deleteMarket = async () => {
     const { deleteMarket, index } = this.props;
     const deleted = await deleteMarket(index);
-    console.log(deleted);
   }
 
   toggleOrderType = () => {
@@ -60,7 +66,6 @@ class Market extends Component {
     let spend = this.state.spend;
     spend = spend * 10000;
     const price = this.getPrice(outcome);
-    console.log(typeof price, spend);
     if (placeOrder) {
       if (spend === "" || spend < 10000) throw "please enter how much you want to spend";
       else {
@@ -76,7 +81,9 @@ class Market extends Component {
     const { resolute, claimEarnings, market, index } = this.props;
     if (market.resoluted) {
       claimEarnings();
+      // TODO: Update frontend on claim
     } else {
+      // TODO: Update frontend on resolute
       resolute(index, [10000, 0], false);
     }
   }

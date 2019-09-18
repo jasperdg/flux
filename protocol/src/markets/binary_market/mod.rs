@@ -60,6 +60,8 @@ impl BinaryMarket {
 		
 		// TODO: Transfer back the amount owed to sender
 		if amount_owed > 0 {
+			let promise_idx = env::promise_batch_create(env::current_account_id());
+			env::promise_batch_action_transfer(promise_idx, amount_owed as u128);
 			return true;
 		} else {
 			return false;

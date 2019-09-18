@@ -1,10 +1,18 @@
 header #header-logo {
 	width: 18%;
 	display: inline-block;
-	padding: 0 5%;
+
+}
+
+header {
+	display: flex;
+	justify-content: space-between;
+	vertical-align: middle;
+	padding: 2% 5% ;
 }
 
 .login-button {
+	align-self: center;
 	color: white;
 	background-color: #FF009C;
 	font-family: "Gilroy";
@@ -12,15 +20,15 @@ header #header-logo {
 	border-radius: 6px;
 	padding: 8px 15px;
 	font-size: 18px;
-	position: absolute;
+	/* position: absolute;
 	right: 5%;
-	top: 2%;
+	top: 2%; */
 }
 .account-info {
 	width: 40%;
-	position: absolute;
+	/* position: absolute;
 	left: 30%;
-	top: 1.5%;
+	top: 1.5%; */
 }
 
 .account-info span {
