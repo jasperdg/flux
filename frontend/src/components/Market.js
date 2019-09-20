@@ -17,12 +17,24 @@ class Market extends Component {
       marketNoOrder: null,
       marketYesOrder: null
     }
+    this.spendInput = React.createRef();
+    this.priceInput = React.createRef();
   }
   componentDidUpdate = async (prevProps) => {
-    if (this.props.market.orderbooks.length > 0 && this.props.market.orderbooks[0].market_order !== prevProps.market.orderbooks[0].market_order) {
+    console.log(this.props.market.orderbooks);
+    if (
+        typeof this.props.market.orderbooks["0"] !== typeof prevProps.market.orderbooks["0"] 
+        || 
+        (this.props.market.orderbooks["0"] && this.props.market.orderbooks["0"].market_order !== prevProps.market.orderbooks["0"].market_order) 
+    ) {
       const marketYesOrder = await this.props.getMarketOrder(this.props.index, 0);
       this.setState({marketYesOrder});
-    } else if (this.props.market.orderbooks.length > 1 && this.props.market.orderbooks[1].market_order !== prevProps.market.orderbooks[1].market_order) {
+    } 
+    else if (
+      typeof this.props.market.orderbooks["1"] !== typeof prevProps.market.orderbooks["1"] 
+      || 
+      (this.props.market.orderbooks["1"] && this.props.market.orderbooks["1"].market_order !== prevProps.market.orderbooks["1"].market_order) 
+    ) {      
       const marketNoOrder = await this.props.getMarketOrder(this.props.index, 1);
       this.setState({marketNoOrder});
     }
@@ -80,7 +92,7 @@ class Market extends Component {
   resoluteOrClaim = () => {
     const { resolute, claimEarnings, market, index } = this.props;
     if (market.resoluted) {
-      claimEarnings();
+      claimEarnings(index);
       // TODO: Update frontend on claim
     } else {
       // TODO: Update frontend on resolute
@@ -106,7 +118,17 @@ class Market extends Component {
     const isMarketOrder = this.state.orderType === "market";
 
     return (
-      <div className="market">
+      <div className="market"
+        onClick={
+          () => {
+            const {type} = this.lastElement ? this.lastElement : "";
+            if (type === "text") {
+              this.lastElement.blur();
+            }
+            this.lastElement = document.activeElement;
+          }
+        }
+      >
         <h1 onClick={this.resoluteOrClaim} className="market-description">{ this.capitalize(market.description) }?</h1>
         {
           market.resoluted === false &&
@@ -124,8 +146,9 @@ class Market extends Component {
               />
             </div>
 
-            <form className={this.state.orderType === "market" ? "pink" : "blue" } onSubmit={e => this.onSubmit(e)}>
-              <TextField 
+            {/* <form className={this.state.orderType === "market" ? "pink" : "blue" } onSubmit={e => this.onSubmit(e)}> */}
+            <div className="inputs">
+            <TextField 
                 className="material-input"
                 label="spend"
                 margin="normal"
@@ -134,6 +157,7 @@ class Market extends Component {
                 <Input  
                   value={this.state.spend}
                   onClick={e => e.target.focus()}
+                  ref={this.spendInput}
                   onChange={e => this.setState({spend: e.target.value})}
                 />
               </TextField>
@@ -141,23 +165,26 @@ class Market extends Component {
               {
                 this.state.orderType === "limit" && (
                   <>
-                  <TextField
-                    className="material-input"
-                    label="price"
-                    margin="normal"
-                    leadingIcon={(<div>$</div>)}
-                  >
-                    <Input  
-                      value={this.state.limitPrice}
-                      onClick={e => e.target.focus()}
-                      onChange={e => {
-                        if(e.target.value <= 100) this.setState({limitPrice: e.target.value});
-                      }}
-                    />
-                  </TextField>
+                    <TextField
+                      className="material-input"
+                      label="price"
+                      margin="normal"
+                      leadingIcon={(<div>$</div>)}
+                    >
+                      <Input  
+                        value={this.state.limitPrice}
+                        onClick={e => e.target.focus()}
+                        ref={this.priceInput}
+                        onChange={e => {
+                          if(e.target.value <= 100) this.setState({limitPrice: e.target.value});
+                        }}
+                      />
+                    </TextField>
                   </>
                 )
               }
+            </div>
+
               <Countdown
                 zeroPadTime={2}
                 date={market.end_time}
@@ -183,7 +210,7 @@ class Market extends Component {
                   {`Yes ${"\n"}@ ${ isMarketOrder ? marketYesOrder && 100 - marketYesOrder.price : this.state.limitPrice}`}
                 </button>
               </div>
-            </form>
+            {/* </form> */}
           </>
         }
       </div>

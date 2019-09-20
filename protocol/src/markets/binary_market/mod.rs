@@ -49,23 +49,21 @@ impl BinaryMarket {
 		return true;
 	}
 
-	pub fn claim_earnings(&mut self) -> bool {
+	pub fn claim_earnings(&mut self, _for: String) -> u64 {
 		assert!(!self.payout.is_none() && !self.invalid.is_none());		
 		assert_eq!(self.resoluted, true);
 		let mut amount_owed = 0;
 		for (i, orderbook) in &mut self.orderbooks {
 			let money_owed_if_winning_share = orderbook.get_and_remove_owed_to_user();
-			amount_owed += money_owed_if_winning_share * self.payout.as_ref().unwrap()[i.to_owned() as usize] / 10000;
+			amount_owed += money_owed_if_winning_share * self.payout.as_ref().unwrap()[i.to_owned() as usize] / 1000;
 		}
 		
-		// TODO: Transfer back the amount owed to sender
+		println!("{:?}", amount_owed);
 		if amount_owed > 0 {
-			let promise_idx = env::promise_batch_create(env::current_account_id());
+			let promise_idx = env::promise_batch_create(_for);
 			env::promise_batch_action_transfer(promise_idx, amount_owed as u128);
-			return true;
-		} else {
-			return false;
-		}
+		} 
+		return amount_owed;
 	}
 
 	fn is_valid_payout(&self, payout: &Vec<u64>, invalid: &bool) -> bool {

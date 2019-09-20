@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 
 ReactDOM.render(
 	<Router>
-		<Route path="/" component={App}/>
+		<Route exact path="/" component={App}/>
 		<Route path="/wallet/login" component={Login}/>
 	</Router>
 	, document.getElementById('root')

@@ -51,9 +51,9 @@ impl Markets {
 		return true;
 	}
 
-	pub fn claim_earnings(&mut self, market_id: u64) -> bool {
+	pub fn claim_earnings(&mut self, market_id: u64, _for: String) -> u64 {
 		let market = &mut self.active_markets[market_id as usize];
-		return market.claim_earnings();
+		return market.claim_earnings(_for);
 	}
 
 	pub fn get_all_markets(&self) -> &Vec<BinaryMarket> { 
@@ -66,6 +66,10 @@ impl Markets {
 
 	pub fn get_market_order(&self, market_id: usize, outcome: u64)  -> Option<&Order> {
 		return  self.active_markets[market_id].orderbooks[&outcome].get_market_order();
+	}
+
+	pub fn get_sender(&self) -> String {
+		return env::predecessor_account_id();
 	}
 }
 
@@ -111,6 +115,7 @@ mod tests {
 		// println!("{:?}", markets);
 
 		// let markets = contract.resolute(0, vec![10000, 0], false);
+		println!("account balance {:?}", env::account_balance());
 
 		let yes_market_order = contract.get_market_order(0, 0); 
 		let no_market_order = contract.get_market_order(0, 1);
@@ -118,9 +123,10 @@ mod tests {
 		assert!(yes_market_order.is_none());
 		assert!(no_market_order.is_none());
 
-		// assert_eq!(market.resolute(vec![5000, 5000], true), true);
+		assert_eq!(contract.resolute(0, vec![10000, 0], false), true);
 
-		// let earnings = market.claim_earnings();
+		let earnings = contract.claim_earnings(0);
 
+		println!("sender: {}", contract.get_sender());
 	}
 }

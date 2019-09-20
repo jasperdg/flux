@@ -1,6 +1,6 @@
 (function() {
-    const CONTRACT_NAME = 'flux_protocol_2';
-    const DEFAULT_ENV = 'development';
+    const CONTRACT_NAME = 'flux_protocol';
+    const DEFAULT_ENV = 'staging';
 
     function getConfig(env) {
         switch (env) {
@@ -26,8 +26,8 @@
                 return {
                     networkId: 'local',
                     nodeUrl: 'http://localhost:3030',
-                    keyPath: `${process.env.HOME}/.near/validator_key.json`,
-                    walletUrl: 'http://localhost:4000/wallet',
+                    keyPath: `~/.near/validator_key.json`,
+                    walletUrl: 'http://localhost:3000/wallet/login',
                     contractName: CONTRACT_NAME,
                     initialBalance: 100000000,
                 };

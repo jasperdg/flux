@@ -30,9 +30,7 @@ class App extends Component {
   }
   
   async componentDidMount() {
-    console.log(window.location.origin);
     if (process.env.NODE_ENV === 'production' && window.location.origin === "https://demo.flux.market") {
-      console.log("doing this");
       this.setState({isRightUrl: true});
     } else if(process.env.NODE_ENV === 'development'){
       this.setState({isRightUrl: true});
@@ -43,7 +41,7 @@ class App extends Component {
     const accountId = walletAccount.getAccountId();
     const isSignedIn = walletAccount.isSignedIn();
     const contract = await near.loadContract(window.nearConfig.contractName, {
-      viewMethods: ["get_all_markets", "get_market", "get_market_order"],
+      viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_sender"],
       changeMethods: ["create_market", "delete_market", "place_order", "resolute_market", "claim_earnings"],
       sender: accountId,
     });
@@ -56,8 +54,6 @@ class App extends Component {
       contractState = await near.account(window.nearConfig.contractName);
       accountState = await account.state();
     }
-    
-    console.log(contractState);
 
     const markets = await contract.get_all_markets();
 
@@ -71,10 +67,6 @@ class App extends Component {
       account,
       accountState
     });
-
-    setTimeout(() => {
-      this.setState({loading: false});
-    }, 2000)
   }
 
   startLoader = () => {
@@ -91,15 +83,15 @@ class App extends Component {
 
   getAndUpdateMarkets = async () => {
     const markets = await this.state.contract.get_all_markets();
-    console.log(markets);
     this.setState({markets});
   }
 
   // TODO: Create wrapper contract for all contract methods,
   createMarket = async () => {
     this.startLoader();
-    try{
-      await this.state.account.functionCall(
+    let res;
+    try {
+      res = await this.state.account.functionCall(
         window.nearConfig.contractName,
         "create_market",
         {
@@ -111,9 +103,11 @@ class App extends Component {
       );
       this.getAndUpdateMarkets();
       this.endLoader(true);
-    } catch {
+    } 
+    catch {
       this.endLoader(false);
     }
+
   }
 
   deleteMarket = async (id) => {
@@ -164,6 +158,7 @@ class App extends Component {
       },
       5344531
     );
+    this.getAndUpdateMarkets();
     console.log("RESPONSE:" , res)
   }
 
@@ -174,10 +169,12 @@ class App extends Component {
         window.nearConfig.contractName, 
         "claim_earnings", 
         {
-          market_id: marketId
+          market_id: marketId,
+          _for: this.state.accountId
         },
         5344531
       );
+      console.log(res);
       this.endLoader(true);
     }
     catch {
@@ -203,7 +200,7 @@ class App extends Component {
 
     return (
       <div className="App">
-
+        {/* <button onClick={() => this.deleteMarket(0)}>d</button> */}
         {this.state.isRightUrl ? 
           <>
           {this.state.txLoading && <Loader txRes={this.state.txRes}/>}
