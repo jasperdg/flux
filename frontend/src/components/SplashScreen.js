@@ -1,6 +1,6 @@
 import React from 'react';
 import '../styles/splashScreen.css';
-import fluxLogo from '../assets/flux-logo.png';
+import fluxLogo from '../assets/flux-logo192.png';
 
 function SplashScreen(props) {
 

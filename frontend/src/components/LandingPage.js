@@ -5,7 +5,7 @@ import fluxLogo from '../assets/flux-logo.png';
 function LandingPage(props) {
 
 	return (
-	  <div id="splash-screen">
+	  <div id="landing-page">
 		  <img src={fluxLogo} alt="flux's logo"/>
 		  <h2>Stay tuned 🤫</h2>
 	  </div>

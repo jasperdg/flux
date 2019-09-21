@@ -17,11 +17,9 @@ class Market extends Component {
       marketNoOrder: null,
       marketYesOrder: null
     }
-    this.spendInput = React.createRef();
-    this.priceInput = React.createRef();
+
   }
   componentDidUpdate = async (prevProps) => {
-    console.log(this.props.market.orderbooks);
     if (
         typeof this.props.market.orderbooks["0"] !== typeof prevProps.market.orderbooks["0"] 
         || 
@@ -76,7 +74,9 @@ class Market extends Component {
   placeOrder = (outcome) => {
     const { placeOrder, index } = this.props;
     let spend = this.state.spend;
-    spend = spend * 10000;
+    // spend = spend * (10 ** 18);
+    spend = spend * (10 ** 6);
+    console.log(spend)
     const price = this.getPrice(outcome);
     if (placeOrder) {
       if (spend === "" || spend < 10000) throw "please enter how much you want to spend";
@@ -167,9 +167,9 @@ class Market extends Component {
                   <>
                     <TextField
                       className="material-input"
-                      label="price"
+                      label="odds"
                       margin="normal"
-                      leadingIcon={(<div>$</div>)}
+                      leadingIcon={(<div>%</div>)}
                     >
                       <Input  
                         value={this.state.limitPrice}

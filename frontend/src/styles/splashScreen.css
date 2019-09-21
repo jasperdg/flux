@@ -7,7 +7,7 @@
 }
 
 #splash-screen img {
-	width: 50%;
+	width: 40%;
 	margin: auto;
 	display: block;
 	margin-top: 30vh;
@@ -20,14 +20,15 @@
 
 /* spinner */
 
-.lds-ripple {
+#splash-screen .lds-ripple {
 	display: block;
 	position: absolute;
 	width: 64px;
 	height: 64px;
 	margin: 0 auto;
 	left: calc(50% - 32px);
-	bottom: 15%;
+	bottom: 15%!important;
+	top: auto;
   }
   .lds-ripple div {
 	position: absolute;

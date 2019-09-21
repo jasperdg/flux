@@ -25,6 +25,16 @@
 }
 
 /* spinner */
+#loader .lds-ripple {
+	display: block;
+	position: absolute;
+	width: 64px;
+	height: 64px;
+	margin: 0 auto;
+	left: calc(50% - 32px);
+	top: 15%!important;
+	top: auto;
+  }
 
 .lds-ripple {
 	display: block;

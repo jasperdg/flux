@@ -1,5 +1,5 @@
 (function() {
-    const CONTRACT_NAME = 'flux_protocol'; /* TODO: fill this in! */
+    const CONTRACT_NAME = 'flux_protocol_3'; /* TODO: fill this in! */
     const DEFAULT_ENV = 'staging';
 
     function getConfig(env) {
@@ -12,7 +12,7 @@
                         nodeUrl: 'https://staging-rpc.nearprotocol.com/',
                         contractName: CONTRACT_NAME,
                         walletUrl: 'https://near-wallet-staging.onrender.com',
-                        initialBalance: 100000000,
+                        initialBalance: 10000000000,
                     };
                 return {
                     networkId: 'default',

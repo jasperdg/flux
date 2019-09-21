@@ -1,19 +1,25 @@
 @font-face {
   font-family: 'Gilroy';
-  src: local('Gilroy-ExtraBold'), url("./../fonts/Gilroy-ExtraBold.otf") format('otf');
+  src: url("./../fonts/Gilroy-ExtraBold.otf") format('otf'),
+  url("./../fonts/gilroy-extrabold-webfont.woff2") format('woff2'),
+  url("./../fonts/gilroy-extrabold-webfont.woff") format('woff');
   font-weight: 600;
   line-height: 140%;
 }
 @font-face {
   font-family: 'Lato';
-  src: local('Lato-Regular'), url("./../fonts/Lato-Regular.ttf") format('ttf');
+  src: url('./../fonts/lato-regular-webfont.woff2') format('woff2'), /* Super Modern Browsers */
+       url('./../fonts/lato-regular-webfont.woff') format('woff'), /* Pretty Modern Browsers */
+       url('./../fonts/Lato-Regular.ttf')  format('truetype'); /* Safari, Android, iOS */
   line-height: 140%;
   font-size: 16px;
   color: #3B3B3B;
 }
 @font-face {
   font-family: 'Lato-bold';
-  src: local('Lato-Bold'), url("./../fonts/Lato-Bold.ttf") format('ttf');
+  src: url('./../fonts/lato-bold-webfont.woff2') format('woff2'), /* Super Modern Browsers */
+       url('./../fonts/lato-bold-webfont.woff') format('woff'), /* Pretty Modern Browsers */
+       url('./../fonts/lato-bold-webfont.ttf')  format('truetype'); /* Safari, Android, iOS */
   line-height: 140%;
   font-size: 16px;
   color: #3B3B3B;

@@ -24,8 +24,8 @@ class App extends Component {
       accountState: null,
       isRightUrl:false,
       txLoading: false,
-      txRes: null
-      // loading: true
+      txRes: null,
+      loading: true
     }
   }
   
@@ -51,7 +51,6 @@ class App extends Component {
     let contractState = null;
     if (isSignedIn) {
       account = await near.account(walletAccount.getAccountId());
-      contractState = await near.account(window.nearConfig.contractName);
       accountState = await account.state();
     }
 
@@ -67,6 +66,10 @@ class App extends Component {
       account,
       accountState
     });
+
+    // setTimeout(() => {
+      this.setState({loading: false});
+    // }, 1000);
   }
 
   startLoader = () => {
@@ -78,12 +81,18 @@ class App extends Component {
     setTimeout( () => this.setState({
       txLoading: false,
       txRes: null
-    }), 1000)
+    }), 500)
   }
 
   getAndUpdateMarkets = async () => {
     const markets = await this.state.contract.get_all_markets();
     this.setState({markets});
+  }
+
+  getAndUpdateBalance = async () => {
+    const account = await this.state.near.account(this.state.accountId);
+    const accountState = await account.state();
+    this.setState({accountState});
   }
 
   // TODO: Create wrapper contract for all contract methods,
@@ -138,6 +147,7 @@ class App extends Component {
           new BN(amount * price)
         );
         this.getAndUpdateMarkets();
+        this.getAndUpdateBalance();
         this.endLoader(true);
         resolve(res);
       } 
@@ -174,8 +184,8 @@ class App extends Component {
         },
         5344531
       );
-      console.log(res);
       this.endLoader(true);
+      this.getAndUpdateBalance();
     }
     catch {
       this.endLoader(false);
@@ -197,10 +207,9 @@ class App extends Component {
 
 
   render() {
-
     return (
       <div className="App">
-        {/* <button onClick={() => this.deleteMarket(0)}>d</button> */}
+        <button onClick={() => this.deleteMarket(0)}>d</button>
         {this.state.isRightUrl ? 
           <>
           {this.state.txLoading && <Loader txRes={this.state.txRes}/>}

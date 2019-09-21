@@ -17,7 +17,8 @@ function Header(props) {
 	}
 	
 	function toDollars(num) {
-		return `$${(num / 10 ** 10).toFixed(2)}`
+		// return `$${(num / 10 ** 18).toFixed(2)}`
+		return `$${(num / 10 ** 6).toFixed(2)}`
 	}
   
 	return (

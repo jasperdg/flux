@@ -1,13 +1,14 @@
 header #header-logo {
 	width: 15%;
 	display: inline-block;
-
+	align-self: center;
 }
 
 header {
 	display: flex;
 	justify-content: space-between;
 	vertical-align: middle;
+	align-items: center;
 	padding: 3% 5% ;
 }
 

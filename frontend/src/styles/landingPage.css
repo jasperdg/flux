@@ -1,4 +1,4 @@
-#splash-screen img {
+#landing-page img {
 	width: 50%;
 	max-width: 250px;
 	margin: auto;
@@ -6,7 +6,7 @@
 	margin-top: 30vh;
 }
 
-#splash-screen h2 {
+#landing-page h2 {
 	text-align: center;
 	color: #310094;
 }
