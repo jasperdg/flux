@@ -128,12 +128,12 @@ class Market extends Component {
           }
         }
       >
-        <h1 onClick={this.resoluteOrClaim} className="market-description">{ this.capitalize(market.description) }?</h1>
+        <h1 onClick={() => {if (this.props.market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</h1>
         {
           market.resoluted === false &&
           <>
             <div className="order-type-toggle-section">
-              <label onClick={this.deleteMarket}>{ this.state.orderType === "limit" ? "Limit order" : "Market order"}</label>
+              <label onClick={this.resoluteOrClaim}>{ this.state.orderType === "limit" ? "Limit order" : "Market order"}</label>
               <Switch 
                 checkedIcon={false} 
                 uncheckedIcon={false}

@@ -112,6 +112,7 @@ class App extends Component {
         5344531,
       );
       this.getAndUpdateMarkets();
+      this.setState({vcName: ""});
       this.endLoader(true);
     } 
     catch {
