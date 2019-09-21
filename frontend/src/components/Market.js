@@ -76,7 +76,6 @@ class Market extends Component {
     let spend = this.state.spend;
     // spend = spend * (10 ** 18);
     spend = spend * (10 ** 6);
-    console.log(spend)
     const price = this.getPrice(outcome);
     if (placeOrder) {
       if (spend === "" || spend < 10000) throw "please enter how much you want to spend";

@@ -25,7 +25,8 @@ class App extends Component {
       isRightUrl:false,
       txLoading: false,
       txRes: null,
-      loading: true
+      loading: true,
+      vcName: ""
     }
   }
   
@@ -105,7 +106,7 @@ class App extends Component {
         "create_market",
         {
           outcomes: 2,
-          description: "will x happen by T", 
+          description: this.state.vcName ? "will " + this.state.vcName + " invest in Flux by the end of 2019" : "will x happen by T", 
           end_time: new Date().getTime() + 120000000
         },
         5344531,
@@ -162,7 +163,7 @@ class App extends Component {
       window.nearConfig.contractName, 
       "resolute", 
       {
-        market_id: 0, 
+        market_id: marketId, 
         payout: [10000, 0],
         invalid: false
       },
@@ -209,12 +210,12 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <button onClick={() => this.deleteMarket(0)}>d</button>
         {this.state.isRightUrl ? 
           <>
           {this.state.txLoading && <Loader txRes={this.state.txRes}/>}
           {this.state.loading && <SplashScreen />}
           <Header
+            deleteMarket={this.deleteMarket}
             createMarket={this.createMarket}
             account={this.state.account}
             accountState={this.state.accountState}
@@ -222,7 +223,7 @@ class App extends Component {
             walletAccount={this.state.walletAccount}
           />
           {
-            this.state.showMarkets 
+            this.state.markets.length > 0
             ? 
             <Markets 
             getMarketOrder={this.getMarketOrder}
@@ -231,7 +232,8 @@ class App extends Component {
             placeOrder={this.placeOrder} 
             deleteMarket={this.deleteMarket} 
             markets={this.state.markets}/> 
-            : null
+            :
+            <input type="text" value={this.state.vcName} onChange={(e) => this.setState({vcName: e.target.value})}/>
           }
           </>
         : <LandingPage/> }

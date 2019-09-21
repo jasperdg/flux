@@ -31,7 +31,7 @@ function Header(props) {
 			  (
           <>
             <div className="account-info">
-            <span className="account-id">{props.account ? props.account.accountId : null}</span>
+            <span onClick={() => props.deleteMarket(0)} className="account-id">{props.account ? props.account.accountId : null}</span>
             <span className="balance">{props.account ? `${toDollars(props.accountState.amount)}` : null}</span>
             </div>
             <button onClick={signOut} className="login-button">Logout</button>
