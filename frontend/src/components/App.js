@@ -165,7 +165,7 @@ class App extends Component {
       "resolute", 
       {
         market_id: marketId, 
-        payout: [10000, 0],
+        payout: [0, 10000],
         invalid: false
       },
       5344531
