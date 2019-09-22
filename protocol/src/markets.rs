@@ -8,6 +8,8 @@ mod binary_market;
 pub type BinaryMarket = binary_market::BinaryMarket;
 pub type Order = binary_market::orderbook::order::Order;
 
+// TODO: refactor, after demo's
+
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Markets {
@@ -37,11 +39,11 @@ impl Markets {
 	}
 
 	// TODO: Can't seem to fill the root order.
-	pub fn place_order(&mut self, market_id: u64, outcome: u64, amount: u64, price: u64) -> bool {
+	pub fn place_order(&mut self, from: String, market_id: u64, outcome: u64, amount: u64, price: u64) -> bool {
 		let total_price = amount * price;
 		assert!(total_price as u128 <= env::attached_deposit());
 		let market = &mut self.active_markets[market_id as usize];
-		market.place_order(outcome, amount, price);
+		market.place_order(from, outcome, amount, price);
 		return true;
 	}
 
@@ -105,28 +107,22 @@ mod tests {
 		testing_env!(context, config);
 		let mut contract = Markets::new();
 		contract.create_market(2, "will x happen by T".to_string(), 123);
-
 		// Testing binary tree
-		let order_1 = contract.place_order(0, 0, 100000, 40);
-		let order_4 = contract.place_order(0, 1, 100000, 60);
+		let order_4 = contract.place_order("alice.near".to_string(), 0, 1, 100000, 85);
+		let order_1 = contract.place_order("alice.near".to_string(), 0, 0, 1000, 15);
+
 		// let order_5 = contract.place_order(0, 1, 100000, 50);
 		// let order_6 = contract.place_order(0, 1, 100000, 50);
 		// let markets = contract.get_all_markets();
 		// println!("{:?}", markets);
 
-		// let markets = contract.resolute(0, vec![10000, 0], false);
-		println!("account balance {:?}", env::account_balance());
-
-		let yes_market_order = contract.get_market_order(0, 0); 
-		let no_market_order = contract.get_market_order(0, 1);
-		println!("{:?}", yes_market_order);
-		assert!(yes_market_order.is_none());
-		assert!(no_market_order.is_none());
+		// let yes_market_order = contract.get_market_order(0, 0); 
+		// let no_market_order = contract.get_market_order(0, 1);
+		// assert!(yes_market_order.is_none());
+		// assert!(no_market_order.is_none());
 
 		assert_eq!(contract.resolute(0, vec![10000, 0], false), true);
 
-		let earnings = contract.claim_earnings(0);
-
-		println!("sender: {}", contract.get_sender());
+		let earnings = contract.claim_earnings(0, "alice.near".to_string());
 	}
 }

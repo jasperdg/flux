@@ -165,13 +165,15 @@ impl Orderbook {
 		return self.open_orders.get(id).unwrap();
 	}
 
-	pub fn fill_matching_orders(&mut self, amount: u64, price: u64) -> u64 {
+	pub fn fill_matching_orders(&mut self, amount: u64, price: u64) -> (u64, u64, String) {
 		let mut root = self.root.as_ref().unwrap();
 		let mut total_filled = 0;
 		let mut to_fill = amount;
 		let matching_price = 100 - price; // Price of 1 set - the bid
 		let mut match_optional = self.find_order_by_price(&root, matching_price);
 		let mut match_exists = !match_optional.is_none();
+		let mut matching_order_owner = "".to_string();
+		let mut matching_order_outcome = 0;
 
 		while match_exists && total_filled < amount {
 			let matching_order_id = match_optional.unwrap();
@@ -196,6 +198,8 @@ impl Orderbook {
 
 
 			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
+			matching_order_owner = matching_order_after_fill.owner.to_string();
+			matching_order_outcome = matching_order_after_fill.outcome;
 			self.filled_orders.insert(matching_order_id, matching_order_after_fill.clone());
 
 			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
@@ -219,7 +223,7 @@ impl Orderbook {
 			}
 			match_exists = false;
 		}
-		return total_filled;
+		return (total_filled, matching_order_outcome, matching_order_owner);
 	}
 
 	pub fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
@@ -265,17 +269,5 @@ impl Orderbook {
 			let next_order = self.open_orders.get(next_order_id);
 			return Some(self.get_new_market_order(next_order).unwrap());
 		}
-	}
-
-	pub fn get_and_remove_owed_to_user(&mut self) -> u64{
-		let sender = env::current_account_id();
-		let mut total_owed = 0;
-		for (i, filled_order) in self.filled_orders.to_owned() {
-			if (filled_order.owner == sender) {
-				total_owed += filled_order.amount_filled * 10;
-				self.filled_orders.remove(&filled_order.id);
-			}
-		}
-		return total_owed;
 	}
 }
