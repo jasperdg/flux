@@ -12,7 +12,7 @@ pub mod orderbook;
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct BinaryMarket {
 	pub orderbooks: BTreeMap<u64, orderbook::Orderbook>,
-	pub filled_orders_by_user: BTreeMap<String, BTreeMap<u64, u64>>,
+	pub filled_orders_by_user: BTreeMap<String, u64>,
 	pub creator: String,
 	pub outcomes: u64,
 	pub description: String,
@@ -51,16 +51,24 @@ impl BinaryMarket {
 		return true;
 	}
 
+	fn to_user_outcome_id(&self, user: String, outcome: u64) -> String {
+		return format!("{}{}", user, outcome.to_string());
+	}
+
 	pub fn claim_earnings(&mut self, _for: String) -> u64 {
 		assert!(!self.payout.is_none() && !self.invalid.is_none());		
 		assert_eq!(self.resoluted, true);
 		let mut amount_owed = 0;
 
-		for (key, filled_amounts_by_outcome) in &self.filled_orders_by_user {
-			for (outcome, amount_to_fill) in filled_amounts_by_outcome {
-				amount_owed += amount_to_fill * self.payout.as_ref().unwrap()[*outcome as usize] / 1000;
-			}
-		}
+		// for outcome in 0..self.outcomes {
+		// 	let user_outcome = self.to_user_outcome_id(_for.to_string(), outcome);
+		// 	let amount = self.filled_orders_by_user.get(&user_outcome);
+		// 	if !amount.is_none() {
+		// 		amount_owed += amount.unwrap() * self.payout.as_ref().unwrap()[outcome as usize] / 1000;
+		// 	}
+		// }
+
+		println!("amt owed: {}", amount_owed);
 		
 		if amount_owed > 0 {
 			let promise_idx = env::promise_batch_create(_for);
@@ -82,8 +90,8 @@ impl BinaryMarket {
 		if inverse_orderbook.get_open_orders().len() > 0 {
 			let (total_filled, match_outcome ,match_owner) = inverse_orderbook.fill_matching_orders(amount, price);
 			if total_filled > 0 {
-				self.modify_order_fills(from, &outcome, total_filled);
-				self.modify_order_fills(match_owner, &match_outcome, total_filled);
+				// self.modify_order_fills(from, &outcome, total_filled);
+				// self.modify_order_fills(match_owner, &match_outcome, total_filled);
 				filled = total_filled;
 			}
 		}
@@ -92,15 +100,14 @@ impl BinaryMarket {
 		return true;
 	}
 
-	fn modify_order_fills(&mut self, from: String, outcome: &u64,total_filled: u64) {
-		self.filled_orders_by_user.entry(from.to_string()).or_insert(BTreeMap::new());
-			self.filled_orders_by_user.entry(from).and_modify(|filled| {
-				filled.entry(*outcome).or_insert(0);
-				filled.entry(*outcome).and_modify(|amount| {
-					*amount += total_filled;
-				});
-			});
-	}
+	// fn modify_order_fills(&mut self, from: String, outcome: &u64, total_filled: u64) {
+	// 	let user_outcome = self.to_user_outcome_id(from, *outcome);
+
+	// 	self.filled_orders_by_user.entry(user_outcome.to_string()).or_insert(0);
+	// 	self.filled_orders_by_user.entry(user_outcome).and_modify(|amount| {
+	// 		*amount += total_filled;
+	// 	});
+	// }
 	
 	fn cancel_order(&mut self, outcome: u64, order_id: &u64 ) -> bool{
 		if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {
@@ -114,9 +121,5 @@ impl BinaryMarket {
 		let orderbook = self.orderbooks.get(&outcome).unwrap();
 		return orderbook.get_order_by_id(order_id);
 	}
-
-	// pub fn get_market_order(&self, outcome: u64) -> orderbook::Order {
-	// 	// return self.orderbooks.get(&outcome).unwrap().get_market_order(None);
-	// }
 	
 }

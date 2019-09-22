@@ -122,7 +122,7 @@ mod tests {
 		// assert!(no_market_order.is_none());
 
 		assert_eq!(contract.resolute(0, vec![10000, 0], false), true);
-
+		let market = contract.get_all_markets();
 		let earnings = contract.claim_earnings(0, "alice.near".to_string());
 	}
 }

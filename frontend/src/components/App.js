@@ -63,7 +63,7 @@ class App extends Component {
       accountId,
       contract,
       isSignedIn,
-      markets,
+      // markets,
       account,
       accountState
     });
