@@ -23,6 +23,7 @@ class App extends Component {
       account: null,
       accountState: null,
       isRightUrl:false,
+      accessKey: null,
       txLoading: false,
       txRes: null,
       loading: true,
@@ -49,12 +50,13 @@ class App extends Component {
 
     let account = null;
     let accountState = null;
-    let contractState = null;
+    let allowance = null;
     if (isSignedIn) {
-      account = await near.account(walletAccount.getAccountId());
+      account = await near.account(walletAccount.getAccountId()); 
       accountState = await account.state();
+      allowance = account._accessKey.permission.FunctionCall.allowance;
     }
-
+    
     const markets = await contract.get_all_markets();
 
     this.setState({
@@ -63,14 +65,13 @@ class App extends Component {
       accountId,
       contract,
       isSignedIn,
-      // markets,
+      markets,
+      allowance,
       account,
       accountState
     });
 
-    // setTimeout(() => {
-      this.setState({loading: false});
-    // }, 1000);
+    this.setState({loading: false});
   }
 
   startLoader = () => {
@@ -93,15 +94,17 @@ class App extends Component {
   getAndUpdateBalance = async () => {
     const account = await this.state.near.account(this.state.accountId);
     const accountState = await account.state();
-    this.setState({accountState});
+    this.setState({
+      allowance: account._accessKey.permission.FunctionCall.allowance,
+      accountState
+    });
   }
 
   // TODO: Create wrapper contract for all contract methods,
   createMarket = async () => {
     this.startLoader();
-    let res;
     try {
-      res = await this.state.account.functionCall(
+      await this.state.account.functionCall(
         window.nearConfig.contractName,
         "create_market",
         {
@@ -140,6 +143,7 @@ class App extends Component {
           window.nearConfig.contractName, 
           "place_order", 
           {
+            from: this.state.accountId,
             market_id: marketId, 
             outcome: outcome, 
             amount: amount, 
@@ -148,9 +152,9 @@ class App extends Component {
           1344531,
           new BN(amount * price)
         );
-        this.getAndUpdateMarkets();
-        this.getAndUpdateBalance();
         this.endLoader(true);
+        this.getAndUpdateBalance();
+        this.getAndUpdateMarkets();
         resolve(res);
       } 
       catch {
@@ -177,7 +181,7 @@ class App extends Component {
   claimEarnings = async (marketId) => {
     this.startLoader()
     try {
-      const res = await this.state.account.functionCall(
+      await this.state.account.functionCall(
         window.nearConfig.contractName, 
         "claim_earnings", 
         {
@@ -185,7 +189,7 @@ class App extends Component {
           _for: this.state.accountId
         },
         5344531
-      );
+      )
       this.endLoader(true);
       this.getAndUpdateBalance();
     }
@@ -195,6 +199,7 @@ class App extends Component {
   }
 
   getMarketOrder = (marketId, outcome) => {
+    console.log({ market_id: marketId, outcome: outcome });
     return new Promise( async (resolve, reject) => {
       try {
         const res = await this.state.contract.get_market_order({ market_id: marketId, outcome: outcome });
@@ -226,7 +231,8 @@ class App extends Component {
           {
             this.state.markets.length > 0
             ? 
-            <Markets 
+            <Markets
+            allowance={this.state.allowance}
             getMarketOrder={this.getMarketOrder}
             resolute={this.resoluteMarket}
             claimEarnings={this.claimEarnings}

@@ -35,6 +35,7 @@ class Markets extends Component {
                 return (
                   <Slide key={i} index={i}>
                     <Market 
+                    allowance={this.props.allowance}
                     index={i} 
                     market={market}
                     getMarketOrder={getMarketOrder}

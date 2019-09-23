@@ -12,7 +12,7 @@
                     nodeUrl: 'https://rpc.nearprotocol.com',
                     contractName: CONTRACT_NAME,
                     walletUrl: 'https://wallet.nearprotocol.com',
-                    initialBalance: 100000000,
+                    initialBalance: 100000000
                 };
             case 'staging':
                 return {

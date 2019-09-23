@@ -17,7 +17,6 @@ function Header(props) {
 	}
 	
 	function toDollars(num) {
-		// return `$${(num / 10 ** 18).toFixed(2)}`
 		return `$${(num / 10 ** 6).toFixed(2)}`
 	}
   
@@ -25,18 +24,18 @@ function Header(props) {
 		<header className="App-header">
 		  <img onClick={props.createMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
 		  {
-			  props.isSignedIn === false 	? 
+				props.isSignedIn === false 	
+				? 
 			  <button onClick={signIn} className="login-button">Login</button>
-											:
-			  (
-          <>
-            <div className="account-info">
-            <span onClick={() => props.deleteMarket(0)} className="account-id">{props.account ? props.account.accountId : null}</span>
-            <span className="balance">{props.account ? `${toDollars(props.accountState.amount)}` : null}</span>
-            </div>
-            <button onClick={signOut} className="login-button">Logout</button>
-          </>
-        )
+				: (
+					<>
+						<div className="account-info">
+						<span className="balance" onClick={() => props.deleteMarket(0)} className="account-id">{props.account ? props.account.accountId : null}</span>
+						<span >{props.account ? `${props.accountState && toDollars(props.accountState.amount)}` : null}</span>
+						</div>
+						<button onClick={signOut} className="login-button">Logout</button>
+					</>
+				)
 		  }
 
 		</header>

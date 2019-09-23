@@ -33,13 +33,13 @@ impl Orderbook {
 		}
 	}
 
-	pub fn add_new_order(&mut self, amount: u64, price: u64, amount_filled: u64) -> bool {
+	pub fn add_new_order(&mut self,from: String, amount: u64, price: u64, amount_filled: u64) -> bool {
 		let order_id = self.to_order_id();
 		let outcome = self.outcome_id;
 		let mut prev_id: Option<u64> = None;
 		let mut better_order_id: Option<u64> = None;
 		let mut worse_order_id: Option<u64> = None;
-		let mut order = &mut Order::new(env::current_account_id(), self.outcome_id, order_id, amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
+		let mut order = &mut Order::new(from, self.outcome_id, order_id, amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
 
 		if amount == amount_filled {
 			self.add_filled_order(order);

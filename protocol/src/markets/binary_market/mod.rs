@@ -60,15 +60,13 @@ impl BinaryMarket {
 		assert_eq!(self.resoluted, true);
 		let mut amount_owed = 0;
 
-		// for outcome in 0..self.outcomes {
-		// 	let user_outcome = self.to_user_outcome_id(_for.to_string(), outcome);
-		// 	let amount = self.filled_orders_by_user.get(&user_outcome);
-		// 	if !amount.is_none() {
-		// 		amount_owed += amount.unwrap() * self.payout.as_ref().unwrap()[outcome as usize] / 1000;
-		// 	}
-		// }
-
-		println!("amt owed: {}", amount_owed);
+		for outcome in 0..self.outcomes {
+			let user_outcome = self.to_user_outcome_id(_for.to_string(), outcome);
+			let amount = self.filled_orders_by_user.get(&user_outcome);
+			if !amount.is_none() {
+				amount_owed += amount.unwrap() * self.payout.as_ref().unwrap()[outcome as usize] / 100;
+			}
+		}
 		
 		if amount_owed > 0 {
 			let promise_idx = env::promise_batch_create(_for);
@@ -90,24 +88,24 @@ impl BinaryMarket {
 		if inverse_orderbook.get_open_orders().len() > 0 {
 			let (total_filled, match_outcome ,match_owner) = inverse_orderbook.fill_matching_orders(amount, price);
 			if total_filled > 0 {
-				// self.modify_order_fills(from, &outcome, total_filled);
-				// self.modify_order_fills(match_owner, &match_outcome, total_filled);
+				self.modify_order_fills(from.to_string(), &outcome, total_filled);
+				self.modify_order_fills(match_owner, &match_outcome, total_filled);
 				filled = total_filled;
 			}
 		}
 		let orderbook = self.orderbooks.entry(outcome).or_insert(orderbook::Orderbook::new(outcome));
-		let order = orderbook.add_new_order(amount, price, filled);
+		let order = orderbook.add_new_order(from, amount, price, filled);
 		return true;
 	}
 
-	// fn modify_order_fills(&mut self, from: String, outcome: &u64, total_filled: u64) {
-	// 	let user_outcome = self.to_user_outcome_id(from, *outcome);
+	fn modify_order_fills(&mut self, from: String, outcome: &u64, total_filled: u64) {
+		let user_outcome = self.to_user_outcome_id(from, *outcome);
 
-	// 	self.filled_orders_by_user.entry(user_outcome.to_string()).or_insert(0);
-	// 	self.filled_orders_by_user.entry(user_outcome).and_modify(|amount| {
-	// 		*amount += total_filled;
-	// 	});
-	// }
+		self.filled_orders_by_user.entry(user_outcome.to_string()).or_insert(0);
+		self.filled_orders_by_user.entry(user_outcome).and_modify(|amount| {
+			*amount += total_filled;
+		});
+	}
 	
 	fn cancel_order(&mut self, outcome: u64, order_id: &u64 ) -> bool{
 		if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {

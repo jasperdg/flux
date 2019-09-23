@@ -20,22 +20,34 @@ class Market extends Component {
 
   }
   componentDidUpdate = async (prevProps) => {
+    const {index} = this.props;
+    const prevYesOrderbooks = prevProps.market.orderbooks["0"];
+    const yesOrderbooks = this.props.market.orderbooks["0"];
+    const prevNorderbooks = prevProps.market.orderbooks["1"];
+    const noOrderbooks = this.props.market.orderbooks["1"];
+
     if (
-        typeof this.props.market.orderbooks["0"] !== typeof prevProps.market.orderbooks["0"] 
-        || 
-        (this.props.market.orderbooks["0"] && this.props.market.orderbooks["0"].market_order !== prevProps.market.orderbooks["0"].market_order) 
+      typeof prevYesOrderbooks !== typeof yesOrderbooks 
+      ||
+      ((prevYesOrderbooks && !prevYesOrderbooks.market_order) &&  (yesOrderbooks && yesOrderbooks.market_order)) 
+      ||
+      (yesOrderbooks &&  yesOrderbooks.market_order !== prevYesOrderbooks.market_order)
     ) {
-      const marketYesOrder = await this.props.getMarketOrder(this.props.index, 0);
+      const marketYesOrder = await this.props.getMarketOrder(index, 0);
       this.setState({marketYesOrder});
-    } 
-    else if (
-      typeof this.props.market.orderbooks["1"] !== typeof prevProps.market.orderbooks["1"] 
-      || 
-      (this.props.market.orderbooks["1"] && this.props.market.orderbooks["1"].market_order !== prevProps.market.orderbooks["1"].market_order) 
-    ) {      
-      const marketNoOrder = await this.props.getMarketOrder(this.props.index, 1);
+    }
+
+    if (
+      typeof prevNorderbooks !== typeof noOrderbooks 
+      ||
+      ((prevNorderbooks && !prevNorderbooks.market_order) &&  (noOrderbooks && noOrderbooks.market_order)) 
+      ||
+      (noOrderbooks &&  noOrderbooks.market_order !== prevNorderbooks.market_order)
+    ) {
+      const marketNoOrder = await this.props.getMarketOrder(index, 1);
       this.setState({marketNoOrder});
     }
+
   }
   componentDidMount = async () => {
     const { getMarketOrder, index } = this.props;
@@ -98,7 +110,9 @@ class Market extends Component {
       resolute(index, [10000, 0], false);
     }
   }
-
+  toDollars(num) {
+		return `$${(num / 10 ** 6).toFixed(2)}`
+	}
   calculateEarnings = (order) => {
     const { spend, limitPrice, orderType } = this.state;
     if (order || orderType !== "market") {
@@ -115,7 +129,7 @@ class Market extends Component {
     const { market } = this.props;
     const { marketNoOrder, marketYesOrder } = this.state;
     const isMarketOrder = this.state.orderType === "market";
-
+    
     return (
       <div className="market"
         onClick={
@@ -128,6 +142,7 @@ class Market extends Component {
           }
         }
       >
+        <span className="allowance">{`allowance: ${this.props.allowance && this.toDollars(this.props.allowance)}`}</span>
         <h1 onClick={() => {if (this.props.market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</h1>
         {
           market.resoluted === false &&

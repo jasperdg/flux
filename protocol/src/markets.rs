@@ -108,8 +108,8 @@ mod tests {
 		let mut contract = Markets::new();
 		contract.create_market(2, "will x happen by T".to_string(), 123);
 		// Testing binary tree
-		let order_4 = contract.place_order("alice.near".to_string(), 0, 1, 100000, 85);
-		let order_1 = contract.place_order("alice.near".to_string(), 0, 0, 1000, 15);
+		contract.place_order("alice.near".to_string(), 0, 0, 1000, 50);
+		let order_4 = contract.place_order("alice.near".to_string(), 0, 1, 100000, 50);
 
 		// let order_5 = contract.place_order(0, 1, 100000, 50);
 		// let order_6 = contract.place_order(0, 1, 100000, 50);
@@ -121,8 +121,9 @@ mod tests {
 		// assert!(yes_market_order.is_none());
 		// assert!(no_market_order.is_none());
 
-		assert_eq!(contract.resolute(0, vec![10000, 0], false), true);
+		assert_eq!(contract.resolute(0, vec![0, 10000], false), true);
 		let market = contract.get_all_markets();
 		let earnings = contract.claim_earnings(0, "alice.near".to_string());
+		println!("earnings {}", earnings);
 	}
 }

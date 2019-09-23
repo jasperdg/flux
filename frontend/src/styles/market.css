@@ -90,7 +90,7 @@
 }
 .market-description {
 	color: #310094;
-	padding: 50px 30px;
+	padding: 45px 30px;
 	display: block;
 	margin: 0 auto;
 }
@@ -126,4 +126,10 @@
 	top: 10px;
 	right: 15px;
 	color: #310094;
+}
+
+.allowance {
+	position: absolute;
+
+	margin-top: 10px;
 }
