@@ -6,28 +6,20 @@ import SplashScreen from './SplashScreen';
 import LandingPage from './LandingPage';
 import BN from 'bn.js';
 import Loader from './Loader';
-import { throws } from 'assert';
+import FluxProtocolWrapper from "./../wrappers/FluxProtocolWrapper";
 
 class App extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      near: null,
-      walletAccount: null,
-      accountId: null,
-      contract: null,
-      isSignedIn: null,
       markets: [],
       showMarkets: true,
-      account: null,
-      accountState: null,
       isRightUrl:false,
-      accessKey: null,
       txLoading: false,
       txRes: null,
       loading: true,
-      vcName: ""
+      fluxProtocol: new FluxProtocolWrapper()
     }
   }
   
@@ -37,41 +29,13 @@ class App extends Component {
     } else if(process.env.NODE_ENV === 'development'){
       this.setState({isRightUrl: true});
     }
-    const near = await window.nearlib.connect(Object.assign({ deps: { keyStore: new window.nearlib.keyStores.BrowserLocalStorageKeyStore() } }, window.nearConfig));
-    const walletAccount = new window.nearlib.WalletAccount(near);
 
-    const accountId = walletAccount.getAccountId();
-    const isSignedIn = walletAccount.isSignedIn();
-    const contract = await near.loadContract(window.nearConfig.contractName, {
-      viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_sender"],
-      changeMethods: ["create_market", "delete_market", "place_order", "resolute_market", "claim_earnings"],
-      sender: accountId,
-    });
-
-    let account = null;
-    let accountState = null;
-    let allowance = null;
-    if (isSignedIn) {
-      account = await near.account(walletAccount.getAccountId()); 
-      accountState = await account.state();
-      allowance = account._accessKey.permission.FunctionCall.allowance;
-    }
+    await this.state.fluxProtocol.init();
     
-    const markets = await contract.get_all_markets();
-
     this.setState({
-      near,
-      walletAccount,
-      accountId,
-      contract,
-      isSignedIn,
-      markets,
-      allowance,
-      account,
-      accountState
+      loading: false,
+      markets: await this.state.fluxProtocol.getMarkets()
     });
-
-    this.setState({loading: false});
   }
 
   startLoader = () => {
@@ -87,129 +51,8 @@ class App extends Component {
   }
 
   getAndUpdateMarkets = async () => {
-    const markets = await this.state.contract.get_all_markets();
+    const markets = await this.state.fluxProtocol.contract.get_all_markets();
     this.setState({markets});
-  }
-
-  getAndUpdateBalance = async () => {
-    const account = await this.state.near.account(this.state.accountId);
-    const accountState = await account.state();
-    this.setState({
-      allowance: account._accessKey.permission.FunctionCall.allowance,
-      accountState
-    });
-  }
-
-  // TODO: Create wrapper contract for all contract methods,
-  createMarket = async () => {
-    this.startLoader();
-    try {
-      await this.state.account.functionCall(
-        window.nearConfig.contractName,
-        "create_market",
-        {
-          outcomes: 2,
-          description: this.state.vcName ? "will " + this.state.vcName + " invest in Flux by the end of 2019" : "will x happen by T", 
-          end_time: new Date().getTime() + 120000000
-        },
-        5344531,
-      );
-      this.getAndUpdateMarkets();
-      this.setState({vcName: ""});
-      this.endLoader(true);
-    } 
-    catch {
-      this.endLoader(false);
-    }
-
-  }
-
-  deleteMarket = async (id) => {
-    await this.state.account.functionCall(
-      window.nearConfig.contractName,
-      "delete_market",
-      {id},
-      5344531
-    );
-    this.getAndUpdateMarkets();
-  }
-
-
-  placeOrder =  (marketId, outcome, amount, price) => {
-    return new Promise( async (resolve, reject) => {
-      this.startLoader();
-      try {
-        const res = await this.state.account.functionCall(
-          window.nearConfig.contractName, 
-          "place_order", 
-          {
-            from: this.state.accountId,
-            market_id: marketId, 
-            outcome: outcome, 
-            amount: amount, 
-            price: price
-          },
-          1344531,
-          new BN(amount * price)
-        );
-        this.endLoader(true);
-        this.getAndUpdateBalance();
-        this.getAndUpdateMarkets();
-        resolve(res);
-      } 
-      catch {
-        this.endLoader(false);
-      }
-    });
-  }
-  
-  resoluteMarket = async (marketId, payout, invalid) => {
-    const res = await this.state.account.functionCall(
-      window.nearConfig.contractName, 
-      "resolute", 
-      {
-        market_id: marketId, 
-        payout: [0, 10000],
-        invalid: false
-      },
-      5344531
-    );
-    this.getAndUpdateMarkets();
-    console.log("RESPONSE:" , res)
-  }
-
-  claimEarnings = async (marketId) => {
-    this.startLoader()
-    try {
-      await this.state.account.functionCall(
-        window.nearConfig.contractName, 
-        "claim_earnings", 
-        {
-          market_id: marketId,
-          _for: this.state.accountId
-        },
-        5344531
-      )
-      this.endLoader(true);
-      this.getAndUpdateBalance();
-    }
-    catch {
-      this.endLoader(false);
-    }
-  }
-
-  getMarketOrder = (marketId, outcome) => {
-    console.log({ market_id: marketId, outcome: outcome });
-    return new Promise( async (resolve, reject) => {
-      try {
-        const res = await this.state.contract.get_market_order({ market_id: marketId, outcome: outcome });
-        resolve(res);
-      } 
-      catch {
-        console.log("no market orders");
-        resolve(null);
-      }
-    });
   }
 
 
@@ -221,26 +64,20 @@ class App extends Component {
           {this.state.txLoading && <Loader txRes={this.state.txRes}/>}
           {this.state.loading && <SplashScreen />}
           <Header
-            deleteMarket={this.deleteMarket}
-            createMarket={this.createMarket}
-            account={this.state.account}
-            accountState={this.state.accountState}
-            isSignedIn={this.state.isSignedIn} 
-            walletAccount={this.state.walletAccount}
+            fluxProtocol={this.state.fluxProtocol}
+            startLoader={this.startLoader}
+            endLoader={this.endLoader}
+            getAndUpdateMarkets={this.getAndUpdateMarkets}
           />
           {
             this.state.markets.length > 0
-            ? 
+            &&
             <Markets
-            allowance={this.state.allowance}
-            getMarketOrder={this.getMarketOrder}
-            resolute={this.resoluteMarket}
-            claimEarnings={this.claimEarnings}
-            placeOrder={this.placeOrder} 
-            deleteMarket={this.deleteMarket} 
-            markets={this.state.markets}/> 
-            :
-            <input type="text" value={this.state.vcName} onChange={(e) => this.setState({vcName: e.target.value})}/>
+            markets={this.state.markets}
+            fluxProtocol={this.state.fluxProtocol}
+            startLoader={this.startLoader}
+            endLoader={this.endLoader}
+            />
           }
           </>
         : <LandingPage/> }

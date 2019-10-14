@@ -20,45 +20,49 @@ class Market extends Component {
 
   }
   componentDidUpdate = async (prevProps) => {
-    const {index} = this.props;
+    const { index } = this.props;
     const prevYesOrderbooks = prevProps.market.orderbooks["0"];
     const yesOrderbooks = this.props.market.orderbooks["0"];
     const prevNorderbooks = prevProps.market.orderbooks["1"];
     const noOrderbooks = this.props.market.orderbooks["1"];
 
     if (
+      // TODO: To isUpdated function
       typeof prevYesOrderbooks !== typeof yesOrderbooks 
       ||
       ((prevYesOrderbooks && !prevYesOrderbooks.market_order) &&  (yesOrderbooks && yesOrderbooks.market_order)) 
       ||
       (yesOrderbooks &&  yesOrderbooks.market_order !== prevYesOrderbooks.market_order)
     ) {
-      const marketYesOrder = await this.props.getMarketOrder(index, 0);
+      const marketYesOrder = await this.props.fluxProtocol.getMarketOrder(index, 0);
+      console.log("hi1", marketYesOrder);
+
       this.setState({marketYesOrder});
     }
 
     if (
+      // TODO: To isUpdated function
       typeof prevNorderbooks !== typeof noOrderbooks 
       ||
       ((prevNorderbooks && !prevNorderbooks.market_order) &&  (noOrderbooks && noOrderbooks.market_order)) 
       ||
       (noOrderbooks &&  noOrderbooks.market_order !== prevNorderbooks.market_order)
     ) {
-      const marketNoOrder = await this.props.getMarketOrder(index, 1);
+      const marketNoOrder = await this.props.fluxProtocol.getMarketOrder(index, 1);
+      console.log("hi2", marketNoOrder);
       this.setState({marketNoOrder});
     }
 
   }
   componentDidMount = async () => {
-    const { getMarketOrder, index } = this.props;
+    const { index } = this.props;
+    const { getMarketOrder } = this.props.fluxProtocol;
+
     const marketYesOrder = await getMarketOrder(index, 0);
     const marketNoOrder = await getMarketOrder(index, 1);
-    this.setState({marketYesOrder, marketNoOrder});
-  }
+    console.log(await getMarketOrder(index, 0));
 
-  deleteMarket = async () => {
-    const { deleteMarket, index } = this.props;
-    const deleted = await deleteMarket(index);
+    this.setState({marketYesOrder, marketNoOrder});
   }
 
   toggleOrderType = () => {
@@ -83,25 +87,32 @@ class Market extends Component {
     else return parseInt(100 - this.state.marketYesOrder.price);
   }
 
-  placeOrder = (outcome) => {
-    const { placeOrder, index } = this.props;
-    let spend = this.state.spend;
+  placeOrder = async (outcome) => {
+    const { index, startLoader, endLoader } = this.props;
+    const { placeOrder } = this.props.fluxProtocol;
+    let { spend } = this.state;
+
     // spend = spend * (10 ** 18);
     spend = spend * (10 ** 6);
     const price = this.getPrice(outcome);
     if (placeOrder) {
+      startLoader();
       if (spend === "" || spend < 10000) throw "please enter how much you want to spend";
       else {
         const amount = Math.round(spend / price);
-        this.props.placeOrder(index, outcome, amount, price);
+        const res = await placeOrder(index, outcome, amount, price);
+        endLoader(res);
       }
     } else {
       console.error("market contract hasn't been initialized yet, need spinner to load market")
     }
   }
 
+  // TODO: Show resolute view when market is finalized
   resoluteOrClaim = () => {
-    const { resolute, claimEarnings, market, index } = this.props;
+    const { market, index } = this.props;
+    const { resolute, claimEarnings } = this.props.fluxProtocol;
+
     if (market.resoluted) {
       claimEarnings(index);
       // TODO: Update frontend on claim
@@ -110,9 +121,11 @@ class Market extends Component {
       resolute(index, [10000, 0], false);
     }
   }
+
   toDollars(num) {
 		return `$${(num / 10 ** 6).toFixed(2)}`
-	}
+  }
+  
   calculateEarnings = (order) => {
     const { spend, limitPrice, orderType } = this.state;
     if (order || orderType !== "market") {
@@ -125,8 +138,10 @@ class Market extends Component {
     }
   }
 
+  // TODO: Breakup into more different pieces
   render() {
     const { market } = this.props;
+    const { allowance } = this.props.fluxProtocol;
     const { marketNoOrder, marketYesOrder } = this.state;
     const isMarketOrder = this.state.orderType === "market";
     
@@ -142,8 +157,8 @@ class Market extends Component {
           }
         }
       >
-        <span className="allowance">{`allowance: ${this.props.allowance && this.toDollars(this.props.allowance)}`}</span>
-        <h1 onClick={() => {if (this.props.market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</h1>
+        <span className="allowance">{`allowance: ${allowance && this.toDollars(allowance)}`}</span>
+        <h1 onClick={() => {if (market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</h1>
         {
           market.resoluted === false &&
           <>

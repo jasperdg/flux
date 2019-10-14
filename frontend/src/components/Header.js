@@ -3,35 +3,48 @@ import '../styles/header.css';
 import fluxLogo from '../assets/flux-logo.png';
 
 function Header(props) {
-
+	const { startLoader, endLoader, getAndUpdateMarkets } = props;
+	const { deleteMarket, accountState, account, walletAccount, createMarket, isSignedIn, accountId } = props.fluxProtocol;
 	function signIn() {
-		props.walletAccount.requestSignIn(
+		walletAccount.requestSignIn(
 			window.nearConfig.contractName,
 			window.nearConfig.contractName,
 		);
   	}
   
 	function signOut() {
-		props.walletAccount.signOut();
-   	window.location.replace(window.location.origin + window.location.pathname);
+		walletAccount.signOut();
+   		window.location.replace(window.location.origin + window.location.pathname);
 	}
 	
 	function toDollars(num) {
 		return `$${(num / 10 ** 6).toFixed(2)}`
 	}
+
+	async function addMarket() {
+		startLoader();
+		const success = await createMarket();
+		endLoader(success);
+		getAndUpdateMarkets();
+	}
   
 	return (
 		<header className="App-header">
-		  <img onClick={props.createMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
+		  <img onClick={addMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
 		  {
-				props.isSignedIn === false 	
+				isSignedIn === false 	
 				? 
 			  <button onClick={signIn} className="login-button">Login</button>
 				: (
 					<>
 						<div className="account-info">
-						<span className="balance" onClick={() => props.deleteMarket(0)} className="account-id">{props.account ? props.account.accountId : null}</span>
-						<span >{props.account ? `${props.accountState && toDollars(props.accountState.amount)}` : null}</span>
+						<span className="balance" onClick={
+							async () => {
+								await deleteMarket(0);
+								getAndUpdateMarkets();
+							}
+						} className="account-id">{accountId}</span>
+						<span >{account ? `${accountState && toDollars(accountState.amount)}` : null}</span>
 						</div>
 						<button onClick={signOut} className="login-button">Logout</button>
 					</>

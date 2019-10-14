@@ -3,6 +3,7 @@ import '../styles/markets.css';
 import Market from './Market';
 import { CarouselProvider, Slider, Slide, Dot } from 'pure-react-carousel';
 import 'pure-react-carousel/dist/react-carousel.es.css';
+
 class Markets extends Component {
   constructor(props) {
     super(props);
@@ -20,14 +21,14 @@ class Markets extends Component {
   }
 
   render() {
-    const { deleteMarket, placeOrder, resolute, claimEarnings, getMarketOrder } = this.props;
-    
+    const { markets } = this.props;
     return (
+      //TODO: Carousel could be in a compoentn of it's own
       <div id="markets-view">
         <CarouselProvider
         naturalSlideWidth={this.state.containerWidth}
         naturalSlideHeight={this.state.containerHeight}
-        totalSlides={this.props.markets.length}
+        totalSlides={markets.length}
         >
           <Slider>
             {
@@ -35,14 +36,11 @@ class Markets extends Component {
                 return (
                   <Slide key={i} index={i}>
                     <Market 
-                    allowance={this.props.allowance}
                     index={i} 
                     market={market}
-                    getMarketOrder={getMarketOrder}
-                    placeOrder={placeOrder} 
-                    deleteMarket={deleteMarket}
-                    resolute={resolute}
-                    claimEarnings={claimEarnings}
+                    fluxProtocol={this.props.fluxProtocol}
+                    startLoader={this.props.startLoader}
+                    endLoader={this.props.endLoader}
                     />                
                   </Slide>
                 );
@@ -53,7 +51,7 @@ class Markets extends Component {
 
           <ul className="dots-ul">
             {
-              this.props.markets.map((markets, i) => {
+              this.props.markets.map((market, i) => {
                 return (
                   <Dot key={i} className="dot clear-button-style" slide={i}>
                     <li>
