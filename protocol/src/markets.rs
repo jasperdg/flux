@@ -1,5 +1,4 @@
 use std::string::String;
-use std::collections::HashMap;
 use near_bindgen::{near_bindgen, env};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
@@ -8,8 +7,7 @@ mod binary_market;
 pub type BinaryMarket = binary_market::BinaryMarket;
 pub type Order = binary_market::orderbook::order::Order;
 
-// TODO: refactor, after demo's
-
+// TODO: handle account correctly.
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Markets {
@@ -38,7 +36,6 @@ impl Markets {
 		return true;
 	}
 
-	// TODO: Can't seem to fill the root order.
 	pub fn place_order(&mut self, from: String, market_id: u64, outcome: u64, amount: u64, price: u64) -> bool {
 		let total_price = amount * price;
 		assert!(total_price as u128 <= env::attached_deposit());
@@ -109,18 +106,10 @@ mod tests {
 		contract.create_market(2, "will x happen by T".to_string(), 123);
 		// Testing binary tree
 		contract.place_order("alice.near".to_string(), 0, 0, 1000, 50);
+		contract.place_order("alice.near".to_string(), 0, 0, 1000, 50);
+		contract.place_order("alice.near".to_string(), 0, 0, 1000, 50);
 		let order_4 = contract.place_order("alice.near".to_string(), 0, 1, 100000, 50);
-
-		// let order_5 = contract.place_order(0, 1, 100000, 50);
-		// let order_6 = contract.place_order(0, 1, 100000, 50);
-		// let markets = contract.get_all_markets();
-		// println!("{:?}", markets);
-
-		// let yes_market_order = contract.get_market_order(0, 0); 
-		// let no_market_order = contract.get_market_order(0, 1);
-		// assert!(yes_market_order.is_none());
-		// assert!(no_market_order.is_none());
-
+		let market = contract.get_market(0);
 		assert_eq!(contract.resolute(0, vec![0, 10000], false), true);
 		let market = contract.get_all_markets();
 		let earnings = contract.claim_earnings(0, "alice.near".to_string());

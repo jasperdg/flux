@@ -1,11 +1,8 @@
-extern crate byteorder;
-use byteorder::{BigEndian, WriteBytesExt};
 use std::collections::BTreeMap;
-use std::collections::btree_map::Entry;
 use std::panic;
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use near_bindgen::{near_bindgen, env};
+use near_bindgen::{near_bindgen};
 
 pub mod order;
 pub type Order = order::Order;
@@ -36,10 +33,7 @@ impl Orderbook {
 	pub fn add_new_order(&mut self,from: String, amount: u64, price: u64, amount_filled: u64) -> bool {
 		let order_id = self.to_order_id();
 		let outcome = self.outcome_id;
-		let mut prev_id: Option<u64> = None;
-		let mut better_order_id: Option<u64> = None;
-		let mut worse_order_id: Option<u64> = None;
-		let mut order = &mut Order::new(from, self.outcome_id, order_id, amount, price, amount_filled, prev_id, better_order_id, worse_order_id);
+		let mut order = &mut Order::new(from, self.outcome_id, order_id, amount, price, amount_filled, None, None, None);
 
 		if amount == amount_filled {
 			self.add_filled_order(order);
@@ -165,43 +159,45 @@ impl Orderbook {
 		return self.open_orders.get(id).unwrap();
 	}
 
-	pub fn fill_matching_orders(&mut self, amount: u64, price: u64) -> (u64, u64, String) {
+
+	pub fn fill_matching_orders(&mut self, amount: u64, price: u64) -> (u64, u64, Vec<String>, Vec<u64>) {
 		let mut root = self.root.as_ref().unwrap();
 		let mut total_filled = 0;
 		let mut to_fill = amount;
 		let matching_price = 100 - price; // Price of 1 set - the bid
 		let mut match_optional = self.find_order_by_price(&root, matching_price);
 		let mut match_exists = !match_optional.is_none();
-		let mut matching_order_owner = "".to_string();
+		let mut matching_orders_owners = vec![];
+		let mut matching_orders_filled = vec![];
+		// TODO: This would have tot urn into an array to ad catregorical markets
 		let mut matching_order_outcome = 0;
-
 		while match_exists && total_filled < amount {
 			let matching_order_id = match_optional.unwrap();
+
+			// Fill orders accordingly
 			self.open_orders.entry(matching_order_id).and_modify(|matching_order| {
 				let match_amount_fillable = matching_order.amount - matching_order.amount_filled;
-				if match_amount_fillable == to_fill {
+				if match_amount_fillable >= to_fill {
 					total_filled += to_fill;
 					matching_order.amount_filled += to_fill;
-					to_fill = 0;
-				}
-				else if match_amount_fillable > to_fill {
-					total_filled += to_fill;
-					matching_order.amount_filled += to_fill;
+					matching_orders_filled.push(to_fill);
 					to_fill = 0;
 				}
 				else {
 					total_filled += match_amount_fillable;
 					matching_order.amount_filled += match_amount_fillable;
+					matching_orders_filled.push(match_amount_fillable);
 					to_fill -= match_amount_fillable;
 				}
 			});
 
-
 			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
-			matching_order_owner = matching_order_after_fill.owner.to_string();
+			matching_orders_owners.push(matching_order_after_fill.owner.to_string());
+
 			matching_order_outcome = matching_order_after_fill.outcome;
 			self.filled_orders.insert(matching_order_id, matching_order_after_fill.clone());
 
+			// If a matching order is filled delete it from open_orders and push it to filled_orders
 			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
 				assert_eq!(self.remove(matching_order_id), &true);
 				if !self.market_order.is_none() && self.market_order.unwrap() == matching_order_id {
@@ -213,17 +209,20 @@ impl Orderbook {
 						self.market_order = Some(new_market_order.unwrap().id);
 					}
 				}
-
 			}
 
 			if !self.root.is_none() {
 				root = self.root.as_ref().unwrap();
 				match_optional = self.find_order_by_price(&root, price);
 				match_exists = !match_optional.is_none();
+				println!("{}", match_exists);
+			} else {
+				match_exists = false;
+
 			}
-			match_exists = false;
 		}
-		return (total_filled, matching_order_outcome, matching_order_owner);
+
+		return (total_filled, matching_order_outcome, matching_orders_owners, matching_orders_filled);
 	}
 
 	pub fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
