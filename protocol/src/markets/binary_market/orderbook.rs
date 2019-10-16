@@ -125,41 +125,6 @@ impl Orderbook {
 		return &true;
 	}
 
-	pub fn descend_tree_for_parent(&mut self, price: u64) -> u64 {
-		let root = self.root.as_ref().unwrap();
-		let mut current_order_id = root.id;
-		let mut next_order_id: Option<&u64> = self.get_next_order(&current_order_id, price);
-		while !next_order_id.is_none() {
-			current_order_id = *next_order_id.unwrap();
-			next_order_id = self.get_next_order(&current_order_id, price);
-		}
-	
-		return current_order_id;
-	}
-
-	pub fn get_open_orders(&self) -> &BTreeMap<u64, Order> {
-		return &self.open_orders;
-	}
-
-	pub fn get_next_order(&mut self, current_order_id: &u64, new_order_price: u64) -> Option<&u64> {
-		let current_order = self.open_orders.get(&current_order_id).unwrap();
-		if new_order_price <= current_order.price {
-			return current_order.worse_order_id.as_ref();
-		} else {
-			return current_order.better_order_id.as_ref();
-		}
-	}
-
-	pub fn to_order_id(&mut self) -> u64 {
-		self.nonce += 1;
-		return self.nonce;
-	}
-
-	pub fn get_order_by_id(&self, id: &u64) -> &Order {
-		return self.open_orders.get(id).unwrap();
-	}
-
-
 	pub fn fill_matching_orders(&mut self, amount: u64, price: u64) -> (u64, u64, Vec<String>, Vec<u64>) {
 		let mut root = self.root.as_ref().unwrap();
 		let mut total_filled = 0;
@@ -240,6 +205,42 @@ impl Orderbook {
 			return self.find_order_by_price(next_order, target_price);		
 		}
 		return None;
+	}
+
+
+	pub fn descend_tree_for_parent(&mut self, price: u64) -> u64 {
+		let root = self.root.as_ref().unwrap();
+		let mut current_order_id = root.id;
+		let mut next_order_id: Option<&u64> = self.get_next_order(&current_order_id, price);
+		while !next_order_id.is_none() {
+			current_order_id = *next_order_id.unwrap();
+			next_order_id = self.get_next_order(&current_order_id, price);
+		}
+	
+		return current_order_id;
+	}
+
+	pub fn to_order_id(&mut self) -> u64 {
+		self.nonce += 1;
+		return self.nonce;
+	}
+
+	pub fn get_open_orders(&self) -> &BTreeMap<u64, Order> {
+		return &self.open_orders;
+	}
+
+
+	pub fn get_next_order(&mut self, current_order_id: &u64, new_order_price: u64) -> Option<&u64> {
+		let current_order = self.open_orders.get(&current_order_id).unwrap();
+		if new_order_price <= current_order.price {
+			return current_order.worse_order_id.as_ref();
+		} else {
+			return current_order.better_order_id.as_ref();
+		}
+	}
+
+	pub fn get_order_by_id(&self, id: &u64) -> &Order {
+		return self.open_orders.get(id).unwrap();
 	}
 
 	pub fn get_market_order(&self) -> Option<&Order> {
