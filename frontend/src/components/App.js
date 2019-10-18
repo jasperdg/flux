@@ -3,8 +3,6 @@ import Markets from './Markets';
 import '../styles/App.css';
 import Header from './Header';
 import SplashScreen from './SplashScreen';
-import LandingPage from './LandingPage';
-import BN from 'bn.js';
 import Loader from './Loader';
 import FluxProtocolWrapper from "./../wrappers/FluxProtocolWrapper";
 
@@ -19,17 +17,12 @@ class App extends Component {
       txLoading: false,
       txRes: null,
       loading: true,
-      fluxProtocol: new FluxProtocolWrapper()
+      fluxProtocol: new FluxProtocolWrapper(),
+      
     }
   }
   
   async componentDidMount() {
-    if (process.env.NODE_ENV === 'production' && window.location.origin === "https://demo.flux.market") {
-      this.setState({isRightUrl: true});
-    } else if(process.env.NODE_ENV === 'development'){
-      this.setState({isRightUrl: true});
-    }
-
     await this.state.fluxProtocol.init();
     
     this.setState({
@@ -59,29 +52,27 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        {this.state.isRightUrl ? 
-          <>
-          {this.state.txLoading && <Loader txRes={this.state.txRes}/>}
-          {this.state.loading && <SplashScreen />}
-          <Header
-            fluxProtocol={this.state.fluxProtocol}
-            startLoader={this.startLoader}
-            endLoader={this.endLoader}
-            getAndUpdateMarkets={this.getAndUpdateMarkets}
+        <>
+        {this.state.txLoading && <Loader txRes={this.state.txRes}/>}
+        {this.state.loading && <SplashScreen />}
+        <Header
+          fluxProtocol={this.state.fluxProtocol}
+          startLoader={this.startLoader}
+          endLoader={this.endLoader}
+          getAndUpdateMarkets={this.getAndUpdateMarkets}
+        />
+        {
+          this.state.markets.length > 0
+          &&
+          <Markets
+          markets={this.state.markets}
+          fluxProtocol={this.state.fluxProtocol}
+          startLoader={this.startLoader}
+          endLoader={this.endLoader}
           />
-          {
-            this.state.markets.length > 0
-            &&
-            <Markets
-            markets={this.state.markets}
-            fluxProtocol={this.state.fluxProtocol}
-            startLoader={this.startLoader}
-            endLoader={this.endLoader}
-            />
-          }
-          </>
-        : <LandingPage/> }
-        
+        }
+        </>
+      
       </div>
     );
   }
