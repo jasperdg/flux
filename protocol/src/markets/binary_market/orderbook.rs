@@ -190,6 +190,28 @@ impl Orderbook {
 		return (total_filled, matching_order_outcome, matching_orders_owners, matching_orders_filled);
 	}
 
+	pub fn get_open_orders_for_user(&mut self, from: String) -> (Vec<u64>, u64) {
+		let mut amount_open = 0;
+		let mut orders = vec![];
+
+		for (key, order) in &self.open_orders {
+			if order.owner == from {
+				let amount_to_fill = order.amount - order.amount_filled;
+				amount_open += amount_to_fill;
+				orders.push(*key);
+			}
+		}
+
+		return (orders, amount_open);
+	}
+
+	pub fn remove_orders(&mut self, orders: Vec<u64>) {
+		for order_id in orders {
+			self.remove(order_id);
+		}
+		
+	}
+
 	pub fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
 		if current_order.price == target_price {
 			return Some(current_order.id);

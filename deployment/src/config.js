@@ -3,17 +3,10 @@
     const DEFAULT_ENV = 'staging';
 
     function getConfig(env) {
-        switch (env) {
+        switch (DEFAULT_ENV) {
 
             case 'production':
             case 'development':
-                    return {
-                        networkId: 'staging',
-                        nodeUrl: 'https://staging-rpc.nearprotocol.com/',
-                        contractName: CONTRACT_NAME,
-                        walletUrl: 'https://near-wallet-staging.onrender.com',
-                        initialBalance: 10000000000,
-                    };
                 return {
                     networkId: 'default',
                     nodeUrl: 'https://rpc.nearprotocol.com',

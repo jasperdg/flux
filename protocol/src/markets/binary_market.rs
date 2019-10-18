@@ -89,13 +89,20 @@ impl BinaryMarket {
 	}
 
 	// TODO: Also claim open orders back.
-	pub fn claim_earnings(&mut self, _for: String) -> u64 {
+	pub fn claim_earnings(&mut self, from: String) -> u64 {
 		assert!(!self.payout_multipliers.is_none() && !self.invalid.is_none());		
 		assert_eq!(self.resoluted, true);
 		let mut claimable_amount = 0;
 
 		for outcome in 0..self.outcomes {
-			let user_outcome_id = self.to_user_outcome_id(_for.to_string(), outcome);
+			self.orderbooks.entry(outcome).and_modify(|orderbook| {
+				let (open_orders, amount_in_orders) = orderbook.get_open_orders_for_user(from.to_string());
+				orderbook.remove_orders(open_orders);
+				claimable_amount += amount_in_orders;
+
+			});
+
+			let user_outcome_id = self.to_user_outcome_id(from.to_string(), outcome);
 			let amount = self.filled_orders_by_user.get(&user_outcome_id);
 			if !amount.is_none() {
 				claimable_amount += amount.unwrap() * self.payout_multipliers.as_ref().unwrap()[outcome as usize] / 100;
@@ -103,7 +110,7 @@ impl BinaryMarket {
 		}
 		
 		if claimable_amount > 0 {
-			let promise_idx = env::promise_batch_create(_for);
+			let promise_idx = env::promise_batch_create(from);
 			env::promise_batch_action_transfer(promise_idx, claimable_amount as u128);
 		} 
 		return claimable_amount;
@@ -123,3 +130,4 @@ impl BinaryMarket {
 	}
 	
 }
+

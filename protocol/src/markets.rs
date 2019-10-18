@@ -110,6 +110,7 @@ mod tests {
 		contract.place_order("alice.near".to_string(), 0, 0, 1000, 50);
 		let order_4 = contract.place_order("alice.near".to_string(), 0, 1, 100000, 50);
 		let market = contract.get_market(0);
+		println!("{:?}", market);
 		assert_eq!(contract.resolute(0, vec![0, 10000], false), true);
 		let market = contract.get_all_markets();
 		let earnings = contract.claim_earnings(0, "alice.near".to_string());
