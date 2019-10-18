@@ -6,6 +6,7 @@ import LandingPage from './components/LandingPage';
 import DesktopSplash from './components/DesktopSplash';
 import * as serviceWorker from './serviceWorker';
 import { BrowserRouter as Router, Route } from "react-router-dom";
+import GlobalStyles from  "./global-styles";
 
 const isRightURL = () => {
 	if (process.env.NODE_ENV === 'production' && window.location.origin === "https://demo.flux.market") {
@@ -30,9 +31,12 @@ const isMobileDevice = () => {
 
 
 ReactDOM.render(
-	<Router>
-		<Route exact path="/" component={isRightURL() && isMobileDevice() ? App : isRightURL() ? DesktopSplash : LandingPage}/>
-	</Router>
+	<>
+		<GlobalStyles/>
+		<Router>
+			<Route exact path="/" component={isRightURL() && isMobileDevice() ? App : isRightURL() ? DesktopSplash : LandingPage}/>
+		</Router>
+	</>
 	, document.getElementById('root')
 );
 

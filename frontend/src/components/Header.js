@@ -1,6 +1,42 @@
 import React from 'react';
-import '../styles/header.css';
 import fluxLogo from '../assets/flux-logo.png';
+import styled from 'styled-components';
+
+const Logo = styled.img`
+	width: 15%;
+	display: inline-block;
+	align-self: center;
+`
+
+const HeaderContainer = styled.header`
+	display: flex;
+	justify-content: space-between;
+	vertical-align: middle;
+	align-items: center;
+	padding: 3% 5% ;
+`
+
+const LoginButton = styled.button`
+	align-self: center;
+	color: white;
+	background-color: #FF009C;
+	font-family: "Gilroy";
+	border: none;
+	border-radius: 6px;
+	padding: 8px 15px;
+	font-size: 18px;
+`
+
+const AccountInfoContainer = styled.div`
+	width: 40%;
+	font-family: "Lato-bold";
+	line-height: 140%;
+`
+
+const AccountInfo = styled.span`
+	display: block;
+	text-align: center;
+`
 
 function Header(props) {
 	const { startLoader, endLoader, getAndUpdateMarkets } = props;
@@ -29,29 +65,29 @@ function Header(props) {
 	}
   
 	return (
-		<header className="App-header">
-		  <img onClick={addMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
+		<HeaderContainer className="App-header">
+		  <Logo onClick={addMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
 		  {
 				isSignedIn === false 	
 				? 
-			  <button onClick={signIn} className="login-button">Login</button>
+			  <LoginButton onClick={signIn} className="login-button">Login</LoginButton>
 				: (
 					<>
-						<div className="account-info">
-						<span className="balance" onClick={
-							async () => {
-								await deleteMarket(0);
-								getAndUpdateMarkets();
-							}
-						} className="account-id">{accountId}</span>
-						<span >{account ? `${accountState && toDollars(accountState.amount)}` : null}</span>
-						</div>
-						<button onClick={signOut} className="login-button">Logout</button>
+						<AccountInfoContainer className="account-info">
+							<AccountInfo className="balance" onClick={
+								async () => {
+									await deleteMarket(0);
+									getAndUpdateMarkets();
+								}
+							} className="account-id">{accountId}</AccountInfo>
+							<AccountInfo >{account ? `${accountState && toDollars(accountState.amount)}` : null}</AccountInfo>
+						</AccountInfoContainer>
+						<LoginButton onClick={signOut} className="login-button">Logout</LoginButton>
 					</>
 				)
 		  }
 
-		</header>
+		</HeaderContainer>
 	);
 
 }

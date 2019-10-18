@@ -6,6 +6,7 @@ import CountDownTimer from './CountDownTimer';
 import OrderTypeToggle from './OrderTypeToggle';
 import MarketInput from './MarketInput';
 import MarketButton from './MarketButton';
+
 class Market extends Component {
   constructor(props) {
     super(props)
