@@ -4,7 +4,6 @@ import './styles/index.css';
 import App from './components/App';
 import LandingPage from './components/LandingPage';
 import DesktopSplash from './components/DesktopSplash';
-import Login from './components/Login';
 import * as serviceWorker from './serviceWorker';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 
@@ -33,7 +32,6 @@ const isMobileDevice = () => {
 ReactDOM.render(
 	<Router>
 		<Route exact path="/" component={isRightURL() && isMobileDevice() ? App : isRightURL() ? DesktopSplash : LandingPage}/>
-		<Route path="/wallet/login" component={Login}/>
 	</Router>
 	, document.getElementById('root')
 );

@@ -4,7 +4,7 @@ import '../styles/loader.css';
 function Loader(props) {
 
 	return (
-	  <div id="loader">
+	  props.isActive && <div id="loader">
 		  <div className="blackground" />
 		  <div className="modal">
 		  	
@@ -14,8 +14,8 @@ function Loader(props) {
 				: 
 				(
 					<>
-		  			<div className="lds-ripple"><div></div><div></div></div>
-					<div className="loading text">processing</div>
+						<div className="lds-ripple"><div></div><div></div></div>
+						<div className="loading text">processing</div>
 					</>
 				)
 			}

@@ -7,14 +7,13 @@ import Loader from './Loader';
 import FluxProtocolWrapper from "./../wrappers/FluxProtocolWrapper";
 
 class App extends Component {
-
   constructor(props) {
     super(props);
     this.state = {
       markets: [],
       showMarkets: true,
       isRightUrl:false,
-      txLoading: false,
+      showLoader: false,
       txRes: null,
       loading: true,
       fluxProtocol: new FluxProtocolWrapper(),
@@ -23,22 +22,22 @@ class App extends Component {
   }
   
   async componentDidMount() {
-    await this.state.fluxProtocol.init();
+    // await this.state.fluxProtocol.init();
     
     this.setState({
       loading: false,
-      markets: await this.state.fluxProtocol.getMarkets()
+      // markets: await this.state.fluxProtocol.getMarkets()
     });
   }
 
   startLoader = () => {
-    this.setState({txLoading: true});
+    this.setState({showLoader: true});
   }
 
   endLoader = (res) => {
     this.setState({txRes: res});
     setTimeout( () => this.setState({
-      txLoading: false,
+      showLoader: false,
       txRes: null
     }), 500)
   }
@@ -48,13 +47,15 @@ class App extends Component {
     this.setState({markets});
   }
 
-
   render() {
     return (
       <div className="App">
         <>
-        {this.state.txLoading && <Loader txRes={this.state.txRes}/>}
         {this.state.loading && <SplashScreen />}
+        <Loader 
+          txRes={this.state.txRes}
+          isActive={this.state.showLoader}
+        />
         <Header
           fluxProtocol={this.state.fluxProtocol}
           startLoader={this.startLoader}
