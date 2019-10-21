@@ -50,6 +50,17 @@ const GlobalStyle = createGlobalStyle`
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
 	}
+
+	body, html {
+		background-color: #DFDFFE;
+		overflow: hidden;
+		display: block;
+		position: fixed;
+		height: 100%;
+		width: 100%;
+	}
+
+	
 `
 
 export default GlobalStyle;

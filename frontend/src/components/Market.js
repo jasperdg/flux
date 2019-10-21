@@ -6,7 +6,24 @@ import CountDownTimer from './CountDownTimer';
 import OrderTypeToggle from './OrderTypeToggle';
 import MarketInput from './MarketInput';
 import MarketButton from './MarketButton';
+import styled from 'styled-components';
+import { BLUE, PINK } from '../constants';
 
+const MarketContainer = styled.div`
+  width: 90%;
+  height: 95%;
+  padding: 0 5%;
+  position: relative;
+  display: block;
+  background-color: white;
+  border-radius: 8px;
+  box-sizing: border-box;
+  -webkit-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+  -moz-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+  box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+  margin-left: 5%;
+`;
+// TODO Update balances on purchase
 class Market extends Component {
   constructor(props) {
     super(props)
@@ -27,6 +44,7 @@ class Market extends Component {
     const marketYesOrder = await getMarketOrder(index, 0);
     const marketNoOrder = await getMarketOrder(index, 1);
 
+
     this.setState({marketYesOrder, marketNoOrder});
   }
 
@@ -44,6 +62,7 @@ class Market extends Component {
     }
   }
 
+  // TOOD: Make this check better, not have to be done on every update
   orderbookUpdated = (prevOrderbook, orderbook) => {
     return (
       typeof prevOrderbook !== typeof orderbook 
@@ -65,6 +84,7 @@ class Market extends Component {
 
   getPrice = (position) => {
     const { limitPrice, orderType } = this.state;
+
     if (orderType === "limit") {
       return parseInt(limitPrice)
     }
@@ -73,7 +93,7 @@ class Market extends Component {
   }
 
   placeOrder = async (outcome) => {
-    const { index, startLoader, endLoader } = this.props;
+    const { index, startLoader, endLoader, getAndUpdateMarkets } = this.props;
     const { placeOrder } = this.props.fluxProtocol;
     let { spend } = this.state;
 
@@ -86,6 +106,8 @@ class Market extends Component {
       else {
         const amount = Math.round(spend / price);
         const res = await placeOrder(index, outcome, amount, price);
+        // TODO: Should only get and update this market, also this shouldnt be triggered here but through events in the future
+        getAndUpdateMarkets();
         endLoader(res);
       }
     } else {
@@ -120,7 +142,14 @@ class Market extends Component {
     }
   }
 
-  // TODO: Breakup into more different pieces
+  ifLastElemIsInputBlur = () => {
+    const {type} = this.lastElement ? this.lastElement : "";
+    if (type === "text") {
+      this.lastElement.blur();
+    }
+    this.lastElement = document.activeElement;
+  }
+
   render() {
     const { market } = this.props;
     const { allowance } = this.props.fluxProtocol;
@@ -128,17 +157,7 @@ class Market extends Component {
     const isMarketOrder = this.state.orderType === "market";
     
     return (
-      <div className="market"
-        onClick={
-          () => {
-            const {type} = this.lastElement ? this.lastElement : "";
-            if (type === "text") {
-              this.lastElement.blur();
-            }
-            this.lastElement = document.activeElement;
-          }
-        }
-      >
+      <MarketContainer onClick={this.ifLastElemIsInputBlur}>
         <span className="allowance">{`allowance: ${allowance && this.toDollars(allowance)}`}</span>
         <h1 onClick={() => {if (market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</h1>
         {
@@ -158,13 +177,11 @@ class Market extends Component {
               
               {
                 this.state.orderType === "limit" && (
-                  <>
-                    <MarketInput 
-                      label = "odds"
-                      value = {this.state.value}
-                      onChange= {e => this.setState({limitPrice: e.target.value})}
-                    />
-                  </>
+                  <MarketInput 
+                    label = "odds"
+                    value = {this.state.limitPrice}
+                    onChange= {e => this.setState({limitPrice: e.target.value})}
+                  />
                 )
               }
             </div>
@@ -178,26 +195,28 @@ class Market extends Component {
             <div className="bottom-section">
 
               <MarketButton 
-                theme="pink"
+                theme={PINK}
                 earnings={this.calculateEarnings(marketNoOrder)}
                 marketOrder = {marketNoOrder}
                 isMarketOrder={isMarketOrder}
                 limitPrice={limitPrice}
                 label="no"
+                placeOrder={this.placeOrder}
               />
 
               <MarketButton 
-                theme="blue"
-                earnings={this.calculateEarnings(marketNoOrder)}
+                theme={BLUE}
+                earnings={this.calculateEarnings(marketYesOrder)}
                 marketOrder = {marketYesOrder}
                 isMarketOrder={isMarketOrder}
                 limitPrice={limitPrice}
                 label="yes"
+                placeOrder={this.placeOrder}
               />
             </div>
         </>
         }
-      </div>
+      </MarketContainer>
     );
   }
 }

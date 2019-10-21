@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Markets from './Markets';
-import '../styles/App.css';
 import Header from './Header';
 import SplashScreen from './SplashScreen';
 import Loader from './Loader';
@@ -11,22 +10,19 @@ class App extends Component {
     super(props);
     this.state = {
       markets: [],
-      showMarkets: true,
-      isRightUrl:false,
       showLoader: false,
       txRes: null,
       loading: true,
       fluxProtocol: new FluxProtocolWrapper(),
-      
     }
   }
   
   async componentDidMount() {
-    // await this.state.fluxProtocol.init();
+    await this.state.fluxProtocol.init();
     
     this.setState({
       loading: false,
-      // markets: await this.state.fluxProtocol.getMarkets()
+      markets: await this.state.fluxProtocol.getMarkets()
     });
   }
 
@@ -36,10 +32,10 @@ class App extends Component {
 
   endLoader = (res) => {
     this.setState({txRes: res});
-    setTimeout( () => this.setState({
+    setTimeout(() => this.setState({
       showLoader: false,
       txRes: null
-    }), 500)
+    }), 500);
   }
 
   getAndUpdateMarkets = async () => {
@@ -66,10 +62,11 @@ class App extends Component {
           this.state.markets.length > 0
           &&
           <Markets
-          markets={this.state.markets}
-          fluxProtocol={this.state.fluxProtocol}
-          startLoader={this.startLoader}
-          endLoader={this.endLoader}
+            markets={this.state.markets}
+            fluxProtocol={this.state.fluxProtocol}
+            startLoader={this.startLoader}
+            endLoader={this.endLoader}
+            getAndUpdateMarkets={this.getAndUpdateMarkets}
           />
         }
         </>

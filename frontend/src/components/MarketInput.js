@@ -1,8 +1,7 @@
 import React from 'react';
 import TextField, {Input} from '@material/react-text-field';
 
-const marketInput = (props) => {
-	const {onChange, value, label} = props;
+const marketInput = ({onChange, value, label}) => {
 
 	return (	
 		<TextField 

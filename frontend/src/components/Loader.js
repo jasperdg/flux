@@ -1,27 +1,48 @@
 import React from 'react';
-import '../styles/loader.css';
+import styled from 'styled-components';
+import Spinner from './Spinner';
+import Modal from './Modal';
+
+const StyledSpinner = styled(Spinner) `
+	left: calc(50% - 32px);
+	top: 15%;
+`;
+
+const Text = styled.div`
+	text-align: center;
+	width: 100%;
+	display: block;
+`;
+
+const ResText = styled(Text)`
+	text-align: center;
+	margin-top: 38px;
+`;
+
+const LoadingText = styled(Text)`
+	position: absolute;
+	left: 0;
+	bottom: 10%;
+`;
 
 function Loader(props) {
 
 	return (
-	  props.isActive && <div id="loader">
-		  <div className="blackground" />
-		  <div className="modal">
+	  props.isActive && <Modal>
+		  {props.txRes !== null 
+			  ? 
+			  <ResText className="res">{props.txRes === true ? "success" : "failed" }</ResText>
+			  : 
+			  (
+				  <>
+					  <StyledSpinner />
+					  <LoadingText className="loading text">processing</LoadingText>
+				  </>
+			  )
+		  }
+	  </Modal>
 		  	
-			{props.txRes !== null 
-				? 
-				<div className="res">{props.txRes === true ? "success" : "failed" }</div>
-				: 
-				(
-					<>
-						<div className="lds-ripple"><div></div><div></div></div>
-						<div className="loading text">processing</div>
-					</>
-				)
-			}
-		  </div>
 		  
-	  </div>
 	);
 
 }

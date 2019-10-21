@@ -1,5 +1,5 @@
 (function() {
-    const CONTRACT_NAME = 'flux_protocol_4';
+    const CONTRACT_NAME = 'flux_protocol_5';
     const DEFAULT_ENV = 'staging';
 
     function getConfig(env) {
