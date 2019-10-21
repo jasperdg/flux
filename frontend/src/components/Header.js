@@ -41,6 +41,7 @@ const AccountInfo = styled.span`
 function Header(props) {
 	const { startLoader, endLoader, getAndUpdateMarkets } = props;
 	const { deleteMarket, accountState, account, walletAccount, createMarket, isSignedIn, accountId } = props.fluxProtocol;
+
 	function signIn() {
 		walletAccount.requestSignIn(
 			window.nearConfig.contractName,
@@ -68,7 +69,7 @@ function Header(props) {
 		<HeaderContainer className="App-header">
 		  <Logo onClick={addMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
 		  {
-				isSignedIn === false 	
+				isSignedIn() === false 	
 				? 
 			  <LoginButton onClick={signIn} className="login-button">Login</LoginButton>
 				: (

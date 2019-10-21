@@ -7,7 +7,6 @@ export default class FluxProtocolWrapper {
 			this.walletAccount = new window.nearlib.WalletAccount(this.near);
 		
 			this.accountId = this.walletAccount.getAccountId();
-			this.isSignedIn = this.walletAccount.isSignedIn();
 			this.contract = await this.near.loadContract(window.nearConfig.contractName, {
 			  viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_sender"],
 			  changeMethods: ["create_market", "delete_market", "place_order", "resolute_market", "claim_earnings"],
@@ -17,8 +16,8 @@ export default class FluxProtocolWrapper {
 			this.account = null;
 			this.accountState = null;
 			this.allowance = null;
-			
-			if (this.isSignedIn) {
+
+			if (this.isSignedIn()) {
 			  this.account = await this.near.account(this.walletAccount.getAccountId()); 
 				this.accountState = await this.account.state();
 			  this.allowance = this.account._accessKey.permission.FunctionCall.allowance;
@@ -27,11 +26,12 @@ export default class FluxProtocolWrapper {
 		});
 	}
 
+	isSignedIn = () => this.walletAccount ? this.walletAccount.isSignedIn() : false;
+
 	getMarkets = () => {
 		return new Promise( async (resolve, reject) => {
 			resolve(await this.contract.get_all_markets());
 		});
-		
 	}
 
 	getAccount = () => {
@@ -46,9 +46,16 @@ export default class FluxProtocolWrapper {
 		});
 	}
 
-	getBalance = () => {
+	getAndSetBalance = () => {
 		return new Promise( async (resolve, reject) => {
-			resolve(await this.account._accessKey.permission.FunctionCall.allowance);
+			if (this.isSignedIn()) {
+			  this.account = await this.near.account(this.walletAccount.getAccountId()); 
+				this.accountState = await this.account.state();
+				this.allowance = this.account._accessKey.permission.FunctionCall.allowance;
+				resolve(true);
+			}	else {
+				resolve(false);
+			}
 		});
 	}
 
@@ -101,6 +108,8 @@ export default class FluxProtocolWrapper {
 					1344531,
 					new BN(amount * price)
 				);
+				await this.getAndSetBalance();
+
 				resolve(true);
 		  } 
 		  catch {

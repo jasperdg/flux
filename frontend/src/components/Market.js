@@ -23,7 +23,27 @@ const MarketContainer = styled.div`
   box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
   margin-left: 5%;
 `;
-// TODO Update balances on purchase
+
+const ButtonSection = styled.div`
+  width: 88%;
+  position: absolute;
+  bottom: 5%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+`;
+
+const Description = styled.h1`
+	color: #310094;
+	padding: 45px 30px;
+	display: block;
+	margin: 0 auto;
+`
+const Allowance = styled.span`
+  position: absolute;
+  margin-top: 10px;
+`;
+
 class Market extends Component {
   constructor(props) {
     super(props)
@@ -158,8 +178,8 @@ class Market extends Component {
     
     return (
       <MarketContainer onClick={this.ifLastElemIsInputBlur}>
-        <span className="allowance">{`allowance: ${allowance && this.toDollars(allowance)}`}</span>
-        <h1 onClick={() => {if (market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</h1>
+        <Allowance >{`allowance: ${allowance && this.toDollars(allowance)}`}</Allowance>
+        <Description onClick={() => {if (market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</Description>
         {
           market.resoluted === false &&
           <>
@@ -192,7 +212,7 @@ class Market extends Component {
               renderer={CountDownTimer}
             />
 
-            <div className="bottom-section">
+            <ButtonSection>
 
               <MarketButton 
                 theme={PINK}
@@ -213,7 +233,7 @@ class Market extends Component {
                 label="yes"
                 placeOrder={this.placeOrder}
               />
-            </div>
+            </ButtonSection>
         </>
         }
       </MarketContainer>

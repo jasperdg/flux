@@ -20,9 +20,10 @@ class App extends Component {
   async componentDidMount() {
     await this.state.fluxProtocol.init();
     
+    // TODO: Quit loading once entire frontent is loaded
     this.setState({
-      loading: false,
-      markets: await this.state.fluxProtocol.getMarkets()
+      markets: await this.state.fluxProtocol.getMarkets(),
+      loading: false
     });
   }
 
