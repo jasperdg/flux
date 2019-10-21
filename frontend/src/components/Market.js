@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import '../styles/market.css';
 import '@material/react-text-field/dist/text-field.min.css';
 import Countdown from 'react-countdown-now';
 import CountDownTimer from './CountDownTimer';
@@ -126,7 +125,7 @@ class Market extends Component {
       else {
         const amount = Math.round(spend / price);
         const res = await placeOrder(index, outcome, amount, price);
-        // TODO: Should only get and update this market, also this shouldnt be triggered here but through events in the future
+        // TODO: this shouldnt be triggered here but through events in the future and should only update markets that are changed/relevant
         getAndUpdateMarkets();
         endLoader(res);
       }
@@ -179,7 +178,7 @@ class Market extends Component {
     return (
       <MarketContainer onClick={this.ifLastElemIsInputBlur}>
         <Allowance >{`allowance: ${allowance && this.toDollars(allowance)}`}</Allowance>
-        <Description onClick={() => {if (market.resoluted) this.resoluteOrClaim()}} className="market-description">{ this.capitalize(market.description) }?</Description>
+        <Description onClick={() => {if (market.resoluted) this.resoluteOrClaim()}} >{ this.capitalize(market.description) }?</Description>
         {
           market.resoluted === false &&
           <>
@@ -188,23 +187,21 @@ class Market extends Component {
               orderType={this.state.orderType}
             />
 
-            <div className="inputs">
-              <MarketInput 
-                label = "spend"
-                value = {this.state.spend}
-                onChange= {e => this.setState({spend: e.target.value})}
-              />
-              
-              {
-                this.state.orderType === "limit" && (
-                  <MarketInput 
-                    label = "odds"
-                    value = {this.state.limitPrice}
-                    onChange= {e => this.setState({limitPrice: e.target.value})}
-                  />
-                )
-              }
-            </div>
+            <MarketInput 
+              label = "spend"
+              value = {this.state.spend}
+              onChange= {e => this.setState({spend: e.target.value})}
+            />
+            
+            {
+              this.state.orderType === "limit" && (
+                <MarketInput 
+                  label = "odds"
+                  value = {this.state.limitPrice}
+                  onChange= {e => this.setState({limitPrice: e.target.value})}
+                />
+              )
+            }
 
             <Countdown
               zeroPadTime={2}
