@@ -27,7 +27,7 @@ const Blackground = styled.div`
 function Modal({className, children}) {
 
 	return (
-		<Blackground className="blackground">
+		<Blackground >
 			<ModalContainer className={className}>
 			{children}
 			</ModalContainer>

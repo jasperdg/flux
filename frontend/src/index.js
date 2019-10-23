@@ -1,18 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './components/App';
-import LandingPage from './components/LandingPage';
+import LandingPage from './components/LandingPage/index';
 import DesktopSplash from './components/DesktopSplash';
 import * as serviceWorker from './serviceWorker';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import GlobalStyles from  "./global-styles";
 
-const isRightURL = () => {
-	if (process.env.NODE_ENV === 'production' && window.location.origin === "https://demo.flux.market") {
+const isDemotURL = () => {
+	// if (process.env.NODE_ENV === 'production' && window.location.origin === "https://demo.flux.market") {
+	if (window.location.origin === "https://demo.flux.market") {
 		return true;
-	} else if(process.env.NODE_ENV === 'development'){
-		return true;
-	} else {
+	} 
+	// else if(process.env.NODE_ENV === 'development'){
+	// 	return true;
+	// } 
+	else {
 		return false;
 	}
 }
@@ -32,7 +35,7 @@ ReactDOM.render(
 	<>
 		<GlobalStyles/>
 		<Router>
-			<Route exact path="/" component={isRightURL() && isMobileDevice() ? App : isRightURL() ? DesktopSplash : LandingPage}/>
+			<Route exact path="/" component={isDemotURL() && isMobileDevice() ? App : isDemotURL() ? DesktopSplash : LandingPage}/>
 		</Router>
 	</>
 	, document.getElementById('root')

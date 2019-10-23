@@ -116,7 +116,7 @@ class Markets extends Component {
             {
               this.props.markets.map((market, i) => {
                 return (
-                  <ClearNav key={i} className="dot clear-button-style" slide={i}>
+                  <ClearNav key={i} slide={i}>
                     <li>
                       <a/>
                     </li>

@@ -25,7 +25,7 @@ impl Markets {
 	}
 
 	pub fn create_market(&mut self, outcomes: u64, description: String, end_time: u64) -> bool {
-		// Do some market validation
+		// TODO: Do some market validation
 		let new_market = BinaryMarket::new(outcomes, description.to_string(), end_time);
 		self.active_markets.push(new_market);
 		return true;

@@ -66,24 +66,24 @@ function Header(props) {
 	}
   
 	return (
-		<HeaderContainer className="App-header">
+		<HeaderContainer>
 		  <Logo onClick={addMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
 		  {
 				isSignedIn() === false 	
 				? 
-			  <LoginButton onClick={signIn} className="login-button">Login</LoginButton>
+			  <LoginButton onClick={signIn} >Login</LoginButton>
 				: (
 					<>
-						<AccountInfoContainer className="account-info">
-							<AccountInfo className="balance" onClick={
+						<AccountInfoContainer>
+							<AccountInfo onClick={
 								async () => {
 									await deleteMarket(0);
 									getAndUpdateMarkets();
 								}
-							} className="account-id">{accountId}</AccountInfo>
+							} >{accountId}</AccountInfo>
 							<AccountInfo >{account ? `${accountState && toDollars(accountState.amount)}` : null}</AccountInfo>
 						</AccountInfoContainer>
-						<LoginButton onClick={signOut} className="login-button">Logout</LoginButton>
+						<LoginButton onClick={signOut}>Logout</LoginButton>
 					</>
 				)
 		  }

@@ -31,12 +31,12 @@ function Loader(props) {
 	  props.isActive && <Modal>
 		  {props.txRes !== null 
 			  ? 
-			  <ResText className="res">{props.txRes === true ? "success" : "failed" }</ResText>
+			  <ResText >{props.txRes === true ? "success" : "failed" }</ResText>
 			  : 
 			  (
 				  <>
 					  <StyledSpinner />
-					  <LoadingText className="loading text">processing</LoadingText>
+					  <LoadingText>processing</LoadingText>
 				  </>
 			  )
 		  }

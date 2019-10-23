@@ -10,8 +10,8 @@ const Timer = styled.span`
 
 export default function CountDownTimer({ days, hours, minutes, seconds, completed }) {
 	if (completed) {
-	  return <Timer className="timer done">Completed</Timer>;
+	  return <Timer>Completed</Timer>;
 	} else {
-	  return <Timer className="timer">{days} days {hours < 10 ? "0" + hours : hours}:{minutes < 10 ? "0" + minutes : minutes }:{seconds < 10 ? "0" + seconds : seconds}</Timer>;
+	  return <Timer>{days} days {hours < 10 ? "0" + hours : hours}:{minutes < 10 ? "0" + minutes : minutes }:{seconds < 10 ? "0" + seconds : seconds}</Timer>;
 	}
 };

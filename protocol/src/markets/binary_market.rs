@@ -88,7 +88,6 @@ impl BinaryMarket {
 		self.resoluted = true;
 	}
 
-	// TODO: Also claim open orders back.
 	pub fn claim_earnings(&mut self, from: String) -> u64 {
 		assert!(!self.payout_multipliers.is_none() && !self.invalid.is_none());		
 		assert_eq!(self.resoluted, true);
