@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "dependencies": {
     "@material/react-text-field": "^0.15.0",
@@ -12,6 +12,7 @@
     "react-countdown-now": "^2.1.1",
     "react-dom": "^16.9.0",
     "react-google-invisible-recaptcha": "^0.2.11",
+    "react-player": "^1.13.0",
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.1.1",
     "react-switch": "^5.0.1",
