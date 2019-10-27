@@ -21,7 +21,11 @@ const Title = styled.h1`
 	font-size: 54px;
 	margin-bottom: 5%;
 	${mediaQuery.mobile`
-		margin-bottom: 3%;
+		// margin-bottom: 3%;
+		margin: 0 auto;
+		position: relative;
+		z-index: 6;
+
 	`}
 `;
 

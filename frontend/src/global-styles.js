@@ -25,7 +25,7 @@ const GlobalStyle = createGlobalStyle`
   	@font-face {
 		font-family: 'Lato';
 		src: url('${latoWoff2}') format('woff2'),
-			url('${latoWoff}') format('woff');
+			url('${latoWoff}') format('woff'),
 			url('${latoOtf}')   format('truetype'); /* Safari, Android, iOS */
 		line-height: 140%;
 		font-size: 16px;
@@ -34,7 +34,7 @@ const GlobalStyle = createGlobalStyle`
   	@font-face {
 		font-family: 'Lato-bold';
 		src: url('${latoBoldWoff2}') format('woff2'),
-			url('${latoBoldWoff}') format('woff');
+			url('${latoBoldWoff}') format('woff'),
 			url('${latoBoldOtf}')   format('truetype'); /* Safari, Android, iOS */
 		line-height: 140%;
 		font-size: 16px;

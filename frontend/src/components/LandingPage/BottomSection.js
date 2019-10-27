@@ -28,7 +28,8 @@ const BottomSection = styled.div`
 		width: 100%;
 		bottom: 0;
 		left: 0;
-		top: 20%;
+		top: 10%;
+		padding-top: 10%;
 	`}
 `;
 
@@ -36,13 +37,14 @@ const Footer = styled.div`
 	opacity: 0.4;
 	align-self: flex-end;
 	padding-left: 5%;
-	padding-bottom: 4.4%;
+	padding-bottom: 2.7%;
 	cursor: pointer;
 
 	${mediaQuery.mobile`
 		display: block;
 		opacity: 1;
 		width: 100%;
+		padding-left: 0;
 		background-color: white;
 		padding-top: 4.4%;
 		text-align: center

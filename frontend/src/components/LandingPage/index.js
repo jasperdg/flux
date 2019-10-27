@@ -4,6 +4,7 @@ import Header from './Header';
 import Title from './Title';
 import BottomSection from './BottomSection';
 import Demo from './Demo';
+import BackgroundIcons from './BackgroundIcons';
 import backgroundWave from './../../assets/background-wave.png';
 import mediaQuery from '../../mediaQuery';
 
@@ -58,6 +59,7 @@ function LandingPage() {
 
 	return (
 	  <LandingPageContainer>
+			<BackgroundIcons/>
 			<Background className="background">
 				<BackgroundWave src={backgroundWave}/>
 			</Background>

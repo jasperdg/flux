@@ -11,8 +11,7 @@ const Title = styled.h1`
 	font-size: 36px;
 	width: 70%;
 	${mediaQuery.mobile`
-		margin: auto;
-		text-align: center;
+		width: 100%;
 		margin-bottom: 7%;
 	`}
 `;
@@ -35,7 +34,7 @@ const EmailInput = styled.input`
 	${mediaQuery.mobile`
 		margin: auto;
 		display: block;
-		width: 100%;
+		width: calc(100% - 20px);
 		max-width: 425px;
 		margin-bottom: 4%;
 
@@ -56,29 +55,24 @@ const SignupButton = styled.button`
 	${mediaQuery.mobile`
 		display: block;
 		margin: auto;
-		max-width: 144px;
+		width: 100%;
 	`}
 `;
 
-const Label = styled.label`
+const Small = styled.small`
 	color: white;
-`;
-
-const SubscripionContainer = styled.div`
-	display: block; 
+	display: block;
+	position: relative;
 	margin: auto;
-	width: 100%;
-	margin-top: 5px;
+	margin-top: 15px;
+	opacity: 0.7;
+	& a {
+		color: white;
+		margin-left: 5px;
+		margin-top: 5px;
+	}
 
-	${mediaQuery.mobile`
-		display: block;
-		margin: auto;
-		width: 80%;
-		margin-top: 2%;
-		max-width: 200px;
-	`}
-
-`;
+`
 
 const ResText = styled.p`
 	text-align: center;
@@ -89,11 +83,16 @@ const Error = styled(ResText)`
 `;
 
 const Success = styled(ResText)`
-	color: green;
+	color: #81c784;
 `;
 
 const SignupContainer = styled.form`
 	width: 40%;
+
+	& .grecaptcha-badge{
+		visibility: hidden;
+		opacity: 0;
+	}
 
 	${mediaQuery.mobile`
 		width: 90%;
@@ -144,24 +143,32 @@ class EmailSignup extends Component {
 
 	onRecaptchaResolved = async (recaptchaToken) => {
 		const { newsletterOptIn, emailAddress } = this.state;
-		const res = await fetch(`${API_URL}/add_email`, {
-			method: "POST",
-			mode: 'cors',
-			cache: 'no-cache',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				emailAddress,
-				newsletterOptIn,
-				recaptchaToken
-			})
-		});
-		const { err } = await res.json();
-
-		this.recaptcha.reset();
-		if (err) return this.setState({error: err}) // TODO: display error;
-		else return this.setState({success: "success"}) // TODO: Display success;
+		let res;
+		try {
+			res = await fetch(`${API_URL}/add_email`, {
+				method: "POST",
+				mode: 'cors',
+				cache: 'no-cache',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					emailAddress,
+					newsletterOptIn,
+					recaptchaToken
+				})
+			});
+			
+			const { err } = await res.json();
+	
+			this.recaptcha.reset();
+			if (err) return this.setState({error: err});
+			else return this.setState({success: 'Get ready for fomo!'});
+			
+		} catch(err) {
+			this.setState({error: "Server error: please try again later."});
+		}
+		
 	}
 	
 
@@ -169,20 +176,22 @@ class EmailSignup extends Component {
 		return (
 			<SignupContainer onSubmit={e => this.onEmailSubmit(e)}>
 
-				<Title>Sign up for Early Access</Title>
+				<Title>Stay in the loop</Title>
 				<InputSection>
 					<EmailInput value={this.state.emailAddress} onChange={e => this.handleEmailChange(e)} placeholder="Your e-mail" type="text"/>
-					<SignupButton>Fomo!</SignupButton>
+					<SignupButton>Sign up</SignupButton>
 				</InputSection>
 				<Recaptcha
 					ref={ ref => this.recaptcha = ref }
 					sitekey={ "6LcT7L4UAAAAANjtaNvX-Lr2Xyz8_ZZZJbUMzYQX" }
 					onResolved={recaptchaToken => this.onRecaptchaResolved(recaptchaToken) } 
 				/>
-				<SubscripionContainer onClick={e => this.handleSubscriptionToggle(e)}>
-					<input readOnly checked={this.state.newsletterOptIn} type="checkbox"/>
-					<Label >I want to stay up-to-date</Label>
-				</SubscripionContainer>
+				<Small>
+					<small>This site is protected by reCAPTCHA and the Google 
+						<a href="https://policies.google.com/privacy">Privacy Policy</a> and
+						<a href="https://policies.google.com/terms">Terms of Service</a> apply.
+					</small>
+				</Small>
 				<Error>{this.state.error}</Error>
 				<Success>{this.state.success}</Success>
 			</SignupContainer>
