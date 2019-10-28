@@ -5,9 +5,9 @@ import mediaQuery from '../../mediaQuery';
 const TitleSection = styled.div`
 	position: absolute;
 	left: 10%;
-	top: 220%;
+	top: 32%;
 	${mediaQuery.mobile`
-		top: 20%;
+		top: 0;
 		left: 5%;
 		position: relative;
 		height: auto;

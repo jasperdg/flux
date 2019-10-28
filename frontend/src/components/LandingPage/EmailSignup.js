@@ -12,7 +12,9 @@ const Title = styled.h1`
 	width: 70%;
 	${mediaQuery.mobile`
 		width: 100%;
-		margin-bottom: 7%;
+		margin-top: 0;
+
+		margin-bottom: 12%;
 	`}
 `;
 
@@ -42,7 +44,7 @@ const EmailInput = styled.input`
 `;
 
 const SignupButton = styled.button`
-	width: calc(38% - 50px);
+	width: calc(28%);
 	display: inline-block;
 	color: white;
 	font-size: 14px;
@@ -97,6 +99,7 @@ const SignupContainer = styled.form`
 	${mediaQuery.mobile`
 		width: 90%;
 		padding: 5%;
+		padding-top: 2%;
 	`}
 `;
 

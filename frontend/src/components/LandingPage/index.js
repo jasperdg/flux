@@ -44,10 +44,6 @@ const LandingPageContainer = styled.div`
 	width: 100%;
 	height: 100vh;
 	z-index: 1;
-
-	${mediaQuery.mobile`
-		overflow-y: scroll;
-	`}
 `;
 
 const Content = styled.div`
@@ -66,8 +62,8 @@ function LandingPage() {
 			<Content>
 				<Header/>
 				<Demo/>
-				<Title/>
 		</Content>
+		<Title/>
 		<BottomSection/>
 	  </LandingPageContainer>
 	);

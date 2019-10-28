@@ -53,11 +53,11 @@ const GlobalStyle = createGlobalStyle`
 
 	body, html {
 		background-color: #DFDFFE;
-		overflow: hidden;
+		/* overflow: hidden;
 		display: block;
 		position: fixed;
 		height: 100%;
-		width: 100%;
+		width: 100%; */
 	}
 
 	// TODO: Make sure all of these styles arent needed
