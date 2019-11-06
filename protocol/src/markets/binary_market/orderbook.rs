@@ -180,7 +180,6 @@ impl Orderbook {
 				root = self.root.as_ref().unwrap();
 				match_optional = self.find_order_by_price(&root, price);
 				match_exists = !match_optional.is_none();
-				println!("{}", match_exists);
 			} else {
 				match_exists = false;
 
@@ -197,7 +196,7 @@ impl Orderbook {
 		for (key, order) in &self.open_orders {
 			if order.owner == from {
 				let amount_to_fill = order.amount - order.amount_filled;
-				amount_open += amount_to_fill;
+				amount_open += amount_to_fill * order.price;
 				orders.push(*key);
 			}
 		}

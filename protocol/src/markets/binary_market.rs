@@ -10,6 +10,7 @@ pub mod orderbook;
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct BinaryMarket {
+	pub id: u64,
 	pub orderbooks: BTreeMap<u64, orderbook::Orderbook>,
 	pub filled_orders_by_user: BTreeMap<String, u64>,
 	pub creator: String,
@@ -23,11 +24,12 @@ pub struct BinaryMarket {
 }
 
 impl BinaryMarket {
-	pub fn new(outcomes: u64, description: String, end_time: u64) -> Self {
+	pub fn new(id: u64, from: String, outcomes: u64, description: String, end_time: u64) -> Self {
 		Self {
+			id,
 			orderbooks: BTreeMap::new(),
 			filled_orders_by_user: BTreeMap::new(),
-			creator: env::current_account_id(),
+			creator: from,
 			outcomes,
 			description,
 			end_time, // in one day
@@ -80,7 +82,7 @@ impl BinaryMarket {
 	pub fn resolute(&mut self, payout: Vec<u64>, invalid: bool) {
 		// TODO: Make sure market can only be resoluted after end time
 		assert_eq!(self.resoluted, false);
-		assert_eq!(env::current_account_id(), self.creator);
+		assert_eq!(env::predecessor_account_id(), self.creator);
 		assert_eq!(payout.len(), 2);
 		assert!(self.is_valid_payout(&payout, &invalid));
 		self.payout_multipliers = Some(payout);
@@ -98,7 +100,6 @@ impl BinaryMarket {
 				let (open_orders, amount_in_orders) = orderbook.get_open_orders_for_user(from.to_string());
 				orderbook.remove_orders(open_orders);
 				claimable_amount += amount_in_orders;
-
 			});
 
 			let user_outcome_id = self.to_user_outcome_id(from.to_string(), outcome);
@@ -109,7 +110,7 @@ impl BinaryMarket {
 		}
 		
 		if claimable_amount > 0 {
-			let promise_idx = env::promise_batch_create(from);
+			let promise_idx = env::promise_batch_create(&from);
 			env::promise_batch_action_transfer(promise_idx, claimable_amount as u128);
 		} 
 		return claimable_amount;

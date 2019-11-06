@@ -134,17 +134,6 @@ class Market extends Component {
     }
   }
 
-  resoluteOrClaim = () => {
-    const { market, index } = this.props;
-    const { resolute, claimEarnings } = this.props.fluxProtocol;
-
-    if (market.resoluted) {
-      claimEarnings(index);
-    } else {
-      resolute(index, [10000, 0], false);
-    }
-  }
-
   toDollars(num) {
 		return `$${(num / 10 ** 6).toFixed(2)}`
   }
@@ -174,11 +163,12 @@ class Market extends Component {
     const { allowance } = this.props.fluxProtocol;
     const { marketNoOrder, marketYesOrder, limitPrice } = this.state;
     const isMarketOrder = this.state.orderType === "market";
-    
+
     return (
       <MarketContainer onClick={this.ifLastElemIsInputBlur}>
+
         <Allowance >{`allowance: ${allowance && this.toDollars(allowance)}`}</Allowance>
-        <Description onClick={() => {if (market.resoluted) this.resoluteOrClaim()}} >{ this.capitalize(market.description) }?</Description>
+        <Description>{ this.capitalize(market.description) }?</Description>
         {
           market.resoluted === false &&
           <>

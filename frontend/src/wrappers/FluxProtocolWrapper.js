@@ -1,6 +1,7 @@
 import BN from 'bn.js';
 
 export default class FluxProtocolWrapper {
+
 	init = () => {
 		return new Promise(async (resolve, reject) => {
 			this.near = await window.nearlib.connect(Object.assign({ deps: { keyStore: new window.nearlib.keyStores.BrowserLocalStorageKeyStore() } }, window.nearConfig));
@@ -8,17 +9,18 @@ export default class FluxProtocolWrapper {
 		
 			this.accountId = this.walletAccount.getAccountId();
 			this.contract = await this.near.loadContract(window.nearConfig.contractName, {
-			  viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_sender"],
+			  viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_sender", "get_owner"],
 			  changeMethods: ["create_market", "delete_market", "place_order", "resolute_market", "claim_earnings"],
 			  sender: this.accountId,
 			});
-		
+
 			this.account = null;
 			this.accountState = null;
 			this.allowance = null;
-
+			this.isOwner = (await this.contract.get_owner()) == this.accountId;
+			
 			if (this.isSignedIn()) {
-			  this.account = await this.near.account(this.walletAccount.getAccountId()); 
+				this.account = await this.near.account(this.walletAccount.getAccountId()); 
 				this.accountState = await this.account.state();
 			  this.allowance = this.account._accessKey.permission.FunctionCall.allowance;
 			}
@@ -29,25 +31,25 @@ export default class FluxProtocolWrapper {
 	isSignedIn = () => this.walletAccount ? this.walletAccount.isSignedIn() : false;
 
 	getMarkets = () => {
-		return new Promise( async (resolve, reject) => {
+		return new Promise( async (resolve) => {
 			resolve(await this.contract.get_all_markets());
 		});
 	}
 
 	getAccount = () => {
-		return new Promise( async (resolve, reject) => {
+		return new Promise( async (resolve) => {
 			resolve(await this.near.account(this.accountId));
 		});
 	}
 
 	getAccountState = () => {
-		return new Promise( async (resolve, reject) => {
+		return new Promise( async (resolve) => {
 			resolve(await this.account.state());
 		});
 	}
 
 	getAndSetBalance = () => {
-		return new Promise( async (resolve, reject) => {
+		return new Promise( async (resolve) => {
 			if (this.isSignedIn()) {
 			  this.account = await this.near.account(this.walletAccount.getAccountId()); 
 				this.accountState = await this.account.state();
@@ -59,36 +61,40 @@ export default class FluxProtocolWrapper {
 		});
 	}
 
-	createMarket = (description) => {
+	createMarket = (description, endTime) => {
 		return new Promise( async (resolve, reject) => {
 			try {
+				if (description.length < 1) return resolve(false);
+				if (endTime < new Date().getTime()) return resolve(false);
+				console.log(description, endTime)
 				await this.account.functionCall(
 					window.nearConfig.contractName,
 					"create_market",
 					{
 						outcomes: 2,
-						description: description ? description : "will x happen by T",
-						end_time: new Date().getTime() + 120000000
+						description: description ,
+						end_time: endTime
 					},
 					5344531,
 				);
-				resolve(true);
+				return resolve(true);
 			}
-			catch {
-				resolve(false);
+			catch(err) {
+				console.log(err);
+				return resolve(err);
 			}
 		});
 	}
 
 	deleteMarket = (id) => {
 		return new Promise( async (resolve, reject) => {
-			await this.account.functionCall(
+			const success = await this.account.functionCall(
 			window.nearConfig.contractName,
 			"delete_market",
 			{id},
 			5344531
 			);
-			resolve(true);
+			resolve(success);
 		});
 	}
 	
@@ -124,9 +130,9 @@ export default class FluxProtocolWrapper {
 				window.nearConfig.contractName, 
 				"resolute", 
 				{
-				market_id: marketId, 
-				payout: [0, 10000],
-				invalid: false
+					market_id: marketId, 
+					payout,
+					invalid
 				},
 				5344531
 			);
@@ -135,7 +141,7 @@ export default class FluxProtocolWrapper {
 	}
 	
 	claimEarnings = (marketId) => {
-		return new Promise( async (resolve, reject) => {
+		return new Promise( async (resolve) => {
 			try {
 				await this.account.functionCall(
 				window.nearConfig.contractName, 
@@ -156,7 +162,7 @@ export default class FluxProtocolWrapper {
 	}
 	
 	getMarketOrder = (marketId, outcome) => {
-		return new Promise( async (resolve, reject) => {
+		return new Promise( async (resolve) => {
 		  try {
 				const res = await this.contract.get_market_order({ market_id: marketId, outcome: outcome });
 				resolve(res);

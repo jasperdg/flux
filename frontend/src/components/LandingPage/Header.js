@@ -59,7 +59,7 @@ const header = () =>  (
 		<Logo src={logo} alt="flux's logo"/>
 		<SocialWrapper>
 			<SocialIcon onClick={() => window.open("https://twitter.com/Flux_Market")} src={twitterIcon}/>
-			<SocialIcon onClick={() => window.open("https://discord.gg/wDqJtpt")} src={discordIcon}/>
+			<SocialIcon onClick={() => window.open("https://discord.gg/eg23nNx")} src={discordIcon}/>
 			<SocialIcon onClick={() => window.open("https://medium.com/@fluxmarket")} src={mediumIcon}/>
 		</SocialWrapper>
 	</Header>

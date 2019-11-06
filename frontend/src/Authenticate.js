@@ -66,7 +66,7 @@ class Authenticate extends Component {
 			return true;
 		} 
 		else {
-			return false;
+			return true;
 		}
 	}
 	
@@ -87,6 +87,7 @@ class Authenticate extends Component {
 			: !this.isMobileDevice() ? <DesktopSplash/>
 			: redirect ? <Redirect to="/redirect"/>
 			: auth ? <App/>
+			// TODO: Start loading screeen here instead of authenticating.		
 			: <div>Authenticating...</div>
 		)
 	}

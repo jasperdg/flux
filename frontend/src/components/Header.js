@@ -47,7 +47,7 @@ function Header(props) {
 			window.nearConfig.contractName,
 			window.nearConfig.contractName,
 		);
-  	}
+	}
   
 	function signOut() {
 		walletAccount.signOut();
@@ -57,17 +57,10 @@ function Header(props) {
 	function toDollars(num) {
 		return `$${(num / 10 ** 6).toFixed(2)}`
 	}
-
-	async function addMarket() {
-		startLoader();
-		const success = await createMarket();
-		endLoader(success);
-		getAndUpdateMarkets();
-	}
   
 	return (
 		<HeaderContainer>
-		  <Logo onClick={addMarket} id="header-logo" src={fluxLogo} alt="our company logo"/>
+		  <Logo id="header-logo" src={fluxLogo} alt="our company logo"/>
 		  {
 				isSignedIn() === false 	
 				? 
@@ -75,13 +68,8 @@ function Header(props) {
 				: (
 					<>
 						<AccountInfoContainer>
-							<AccountInfo onClick={
-								async () => {
-									await deleteMarket(0);
-									getAndUpdateMarkets();
-								}
-							} >{accountId}</AccountInfo>
-							<AccountInfo >{account ? `${accountState && toDollars(accountState.amount)}` : null}</AccountInfo>
+							<AccountInfo> {accountId}</AccountInfo>
+							<AccountInfo> {account ? `${accountState && toDollars(accountState.amount)}` : null}</AccountInfo>
 						</AccountInfoContainer>
 						<LoginButton onClick={signOut}>Logout</LoginButton>
 					</>

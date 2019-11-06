@@ -80,11 +80,10 @@ class Markets extends Component {
     this.setState({containerHeight, containerWidth});
   }
 
-
   // TODO only lazyload data if it's the seleted market
   render() {
     const { markets, getAndUpdateMarkets, fluxProtocol, startLoader, endLoader} = this.props;
-
+    
     return (
       <MarketsContainer id="markets-container">
         <CarouselProvider
@@ -94,7 +93,7 @@ class Markets extends Component {
         >
           <Slider>
             {
-              this.props.markets.map((market, i) => {
+              markets.map((market, i) => {
                 return (
                   <Slide key={i} index={i}>
                     <Market 
@@ -114,7 +113,8 @@ class Markets extends Component {
 
           <DotsContainer>
             {
-              this.props.markets.map((market, i) => {
+              
+              markets.map((market, i) => {
                 return (
                   <ClearNav key={i} slide={i}>
                     <li>
