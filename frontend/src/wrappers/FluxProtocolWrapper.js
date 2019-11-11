@@ -9,7 +9,7 @@ export default class FluxProtocolWrapper {
 		
 			this.accountId = this.walletAccount.getAccountId();
 			this.contract = await this.near.loadContract(window.nearConfig.contractName, {
-			  viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_sender", "get_owner"],
+			  viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_sender", "get_owner", "get_earnings"],
 			  changeMethods: ["create_market", "delete_market", "place_order", "resolute_market", "claim_earnings"],
 			  sender: this.accountId,
 			});
@@ -29,6 +29,16 @@ export default class FluxProtocolWrapper {
 	}
 
 	isSignedIn = () => this.walletAccount ? this.walletAccount.isSignedIn() : false;
+	
+	getEarningsAmount = (marketId) => new Promise( async (resolve, reject) => {
+		try {
+			const res = await this.contract.get_earnings({market_id: marketId, from: this.accountId})
+			return resolve(res);
+		} catch (err) {
+			return resolve(0);
+		}
+	});
+	
 
 	getMarkets = () => {
 		return new Promise( async (resolve) => {
@@ -97,8 +107,11 @@ export default class FluxProtocolWrapper {
 			resolve(success);
 		});
 	}
-	
-	placeOrder = (marketId, outcome, amount, price) => {
+	// Purchasing:  333333  shares for:  9999990
+	// Purchasing:  142857  shares for:  9999990
+	placeOrder = (marketId, outcome, spend, pricePerShare) => {
+		console.log("Spending: ", spend, " shares for: ", spend / pricePerShare);
+
 		return new Promise( async (resolve, reject) => {
 		  try {
 				await this.account.functionCall(
@@ -108,11 +121,11 @@ export default class FluxProtocolWrapper {
 					from: this.accountId,
 					market_id: marketId, 
 					outcome: outcome, 
-					amount: amount, 
-					price: price
+					amount: spend, 
+					price: pricePerShare
 					},
 					1344531,
-					new BN(amount * price)
+					new BN(spend * pricePerShare)
 				);
 				await this.getAndSetBalance();
 
@@ -143,7 +156,7 @@ export default class FluxProtocolWrapper {
 	claimEarnings = (marketId) => {
 		return new Promise( async (resolve) => {
 			try {
-				await this.account.functionCall(
+				const res = await this.account.functionCall(
 				window.nearConfig.contractName, 
 				"claim_earnings", 
 				{
@@ -152,7 +165,7 @@ export default class FluxProtocolWrapper {
 				},
 				5344531
 				);
-				resolve(true);
+				resolve(res);
 			}
 			catch {
 				resolve(false);

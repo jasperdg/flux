@@ -14,9 +14,7 @@ const Market = styled.div`
 
 export default ({ market, fluxProtocol, getAndUpdateMarkets }) => {
 	const deleteMarket = async () => {
-		console.log("deleting market");
 		const res = await fluxProtocol.deleteMarket(market.id);
-		console.log(res);
 		getAndUpdateMarkets();
 	}
 

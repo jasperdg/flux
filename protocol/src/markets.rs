@@ -23,14 +23,14 @@ impl Markets {
 	pub fn create_market(&mut self, outcomes: u64, description: String, end_time: u64) -> bool {
 		// TODO: Do some market validation
 		let from = env::predecessor_account_id();
-		if from == self.creator {
+		// if from == self.creator {
 			let new_market = BinaryMarket::new(self.nonce, from, outcomes, description.to_string(), end_time);
 			self.active_markets.insert(self.nonce, new_market);
 			self.nonce = self.nonce + 1;
 			return true;
-		} else {
-			return false;
-		}
+		// } else {
+		// 	return false;
+		// }
 	}
 
 	pub fn delete_market(&mut self, id: u64) -> bool {
@@ -45,9 +45,8 @@ impl Markets {
 	}
 
 	pub fn place_order(&mut self, market_id: u64, outcome: u64, amount: u64, price: u64) -> bool {
-		let total_price = amount * price;
 		let from = env::predecessor_account_id();
-		assert!(total_price as u128 <= env::attached_deposit());
+		assert!(amount as u128 <= env::attached_deposit());
 		self.active_markets.entry(market_id).and_modify(|market| {
 			market.place_order(from, outcome, amount, price);
 		});
@@ -73,6 +72,10 @@ impl Markets {
 			funds_claimed = market.claim_earnings(from);
 		});
 		return funds_claimed;
+	}
+
+	pub fn get_earnings(&self, market_id: u64, from: String) -> u64 {
+		return self.active_markets.get(&market_id).unwrap().get_earnings(from);	
 	}
 
 	pub fn get_owner(&self) -> &String {
@@ -121,11 +124,12 @@ mod tests {
             input: vec![],
             block_index: 0,
             account_balance: 0,
+			is_view: false,
             storage_usage: 0,
+			block_timestamp: 123789,
             attached_deposit: value,
             prepaid_gas: 10u64.pow(9),
             random_seed: vec![0, 1, 2],
-            free_of_charge: false,
             output_data_receivers: vec![],
 		}
 	}
@@ -135,20 +139,13 @@ mod tests {
 		let mut context = get_context(500000000);
 		let config = Config::default();
 		testing_env!(context, config);
-		let mut contract = Markets::new();
-		println!("{}", contract.get_owner());
-		// contract.create_market(2, "will x happen by T".to_string(), 123);
-		// contract.create_market(2, "will x happen by T".to_string(), 123);
-		// contract.create_market(2, "will x happen by T".to_string(), 123);
-		// // // Testing binary tree
-		// contract.place_order(0, 0, 1000, 50);
-		// contract.place_order(0, 0, 1000, 50);
-		// contract.place_order(0, 0, 1000, 50);
-
-		// let order_4 = contract.place_order(0, 1, 100000, 50);
-		// let market = contract.get_market(0);
-		// assert_eq!(contract.resolute(0, vec![0, 10000], false), true);
-		// let market = contract.get_all_markets();
+		let mut contract = Markets::default();
+		contract.create_market(2, "Hi!".to_string(), 100010101001010);
+		
+		let order_5 = contract.place_order(0, 1, 40000, 40);
+		let order_4 = contract.place_order(0, 0, 60000, 60);
+		contract.resolute(0, vec![10000, 0], false);
+		contract.get_earnings(0, "carol.near".to_string());
 		// let earnings = contract.claim_earnings(0);
 		// println!("earnings {}", earnings);
 	}

@@ -45,20 +45,22 @@ impl BinaryMarket {
 
 		let inverse_outcome = if outcome == 0 {1} else {0};
 		let inverse_orderbook = self.orderbooks.entry(inverse_outcome).or_insert(orderbook::Orderbook::new(outcome));
+		let fillable = amount / price;
 		let mut filled = 0;
 
-		if inverse_orderbook.get_open_orders().len() > 0 {
-			let (total_filled, match_outcome, matches_owners, matches_filled) = inverse_orderbook.fill_matching_orders(amount, price);
-			if total_filled > 0 {
-				self.modify_order_fills(from.to_string(), &outcome, total_filled);
-				for i in 0..matches_owners.len() {
-					self.modify_order_fills(matches_owners[i].to_string(), &match_outcome, matches_filled[i]);
-				}
-				filled = total_filled;
-			}
-		}
-		let orderbook = self.orderbooks.entry(outcome).or_insert(orderbook::Orderbook::new(outcome));
-		let order = orderbook.add_new_order(from, amount, price, filled);
+		// if inverse_orderbook.get_open_orders().len() > 0 {
+		// 	let (total_filled, match_outcome, matches_owners, matches_filled) = inverse_orderbook.fill_matching_orders(amount, price);
+		// 	println!("matches filled: {:?}", total_filled);
+		// 	if total_filled > 0 {
+		// 		self.modify_order_fills(from.to_string(), &outcome, total_filled);
+		// 		for i in 0..matches_owners.len() {
+		// 			self.modify_order_fills(matches_owners[i].to_string(), &match_outcome, matches_filled[i]);
+		// 		}
+		// 		filled = total_filled;
+		// 	}
+		// }
+		// let orderbook = self.orderbooks.entry(outcome).or_insert(orderbook::Orderbook::new(outcome));
+		// let order = orderbook.add_new_order(from, amount, price, filled);
 		return true;
 	}
 
@@ -90,6 +92,7 @@ impl BinaryMarket {
 		self.resoluted = true;
 	}
 
+	// TODO: refactor claiming / getting of earnigns
 	pub fn claim_earnings(&mut self, from: String) -> u64 {
 		assert!(!self.payout_multipliers.is_none() && !self.invalid.is_none());		
 		assert_eq!(self.resoluted, true);
@@ -103,9 +106,11 @@ impl BinaryMarket {
 			});
 
 			let user_outcome_id = self.to_user_outcome_id(from.to_string(), outcome);
-			let amount = self.filled_orders_by_user.get(&user_outcome_id);
-			if !amount.is_none() {
-				claimable_amount += amount.unwrap() * self.payout_multipliers.as_ref().unwrap()[outcome as usize] / 100;
+			let amount = self.filled_orders_by_user.get(&user_outcome_id).unwrap_or(&0);
+			if amount > &0 {
+				claimable_amount += amount * self.payout_multipliers.as_ref().unwrap()[outcome as usize] / 100;
+				// claimable_amount += amount * 100;
+				self.filled_orders_by_user.insert(user_outcome_id, 0);
 			}
 		}
 		
@@ -113,6 +118,30 @@ impl BinaryMarket {
 			let promise_idx = env::promise_batch_create(&from);
 			env::promise_batch_action_transfer(promise_idx, claimable_amount as u128);
 		} 
+		return claimable_amount;
+	}
+
+	pub fn get_earnings(&self, from: String) -> u64 {
+		assert!(!self.payout_multipliers.is_none() && !self.invalid.is_none());		
+		assert_eq!(self.resoluted, true);
+		let mut claimable_amount = 0;
+
+		for outcome in 0..self.outcomes {
+			let new_orderbook = orderbook::Orderbook::new(outcome);
+			let orderbook = self.orderbooks.get(&outcome).unwrap_or(&new_orderbook);
+			let (open_orders, amount_in_orders) = orderbook.get_open_orders_for_user(from.to_string());
+			println!("amount left in orders = {}", amount_in_orders);
+			claimable_amount += amount_in_orders;
+
+			let user_outcome_id = self.to_user_outcome_id(from.to_string(), outcome);
+			let amount = self.filled_orders_by_user.get(&user_outcome_id);
+			if !amount.is_none() {
+				claimable_amount += amount.unwrap() * self.payout_multipliers.as_ref().unwrap()[outcome as usize] / 100;
+				// claimable_amount += (amount.unwrap() * 100) / 2;
+			}
+			println!("claimabile amount for outcome: {} is: {}", outcome, claimable_amount);
+		}
+		
 		return claimable_amount;
 	}
 

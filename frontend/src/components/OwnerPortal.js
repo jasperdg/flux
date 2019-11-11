@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import OwnerPortalMarket from './OwnerPortalMarket';
+import DateTimePicker from 'react-datetime-picker';
 
 const OwnerPortalContainer = styled.div`
 `;
 const ShowHideButton = styled.button``;
 
 const OwnerPortal = ({markets, fluxProtocol, getAndUpdateMarkets}) => {
-	const [description, setDescription] = useState('dbjnadnasdnasd');
-	const [endTime, setEndtime] = useState(157304608000000);
-	const [show, toggleShow] = useState(true);
+	const [description, setDescription] = useState('');
+	const [endTime, setEndtime] = useState(new Date());
+	const [show, toggleShow] = useState(false);
 
 
 	const handleEvent = async (e) => {
 		e.preventDefault();
-		const res = await fluxProtocol.createMarket(description, endTime);
-		console.log(res);
+		const res = await fluxProtocol.createMarket(description, endTime.getTime());
 		getAndUpdateMarkets();
 	}
 
@@ -33,10 +33,9 @@ const OwnerPortal = ({markets, fluxProtocol, getAndUpdateMarkets}) => {
 					/>
 
 					<label>end time:</label>
-					<input
-						type="text"
+					<DateTimePicker
 						value={endTime}
-						onChange={event => setEndtime(event.target.value)} 
+						onChange={setEndtime} 
 					/>
 					<button type="submit">-></button>
 				</form>

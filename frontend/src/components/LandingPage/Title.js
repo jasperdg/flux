@@ -20,6 +20,8 @@ const Title = styled.h1`
 	line-height: 100%;
 	font-size: 54px;
 	margin-bottom: 5%;
+	padding: 0;
+	display: block;
 	${mediaQuery.mobile`
 		// margin-bottom: 3%;
 		margin: 0 auto;

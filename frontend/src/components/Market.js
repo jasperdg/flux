@@ -7,6 +7,7 @@ import MarketInput from './MarketInput';
 import MarketButton from './MarketButton';
 import styled from 'styled-components';
 import { BLUE, PINK } from '../constants';
+import { fromPayoutDistribution } from '../utils/utils';
 
 const MarketContainer = styled.div`
   width: 90%;
@@ -52,31 +53,34 @@ class Market extends Component {
       limitPrice: 50,
       spend: 0,
       marketNoOrder: null,
-      marketYesOrder: null
+      marketYesOrder: null,
+      earnings: ""
     }
   }
 
   componentDidMount = async () => {
-    const { index } = this.props;
-    const { getMarketOrder } = this.props.fluxProtocol;
+    const { market } = this.props;
+    const { getMarketOrder, getEarningsAmount } = this.props.fluxProtocol;
+    let earnings = "";
+    const marketYesOrder = await getMarketOrder(market.id, 0);
+    const marketNoOrder = await getMarketOrder(market.id, 1);
+    if (market.resoluted) {
+      earnings = await getEarningsAmount(market.id);
 
-    const marketYesOrder = await getMarketOrder(index, 0);
-    const marketNoOrder = await getMarketOrder(index, 1);
-
-
-    this.setState({marketYesOrder, marketNoOrder});
+    }
+    this.setState({marketYesOrder, marketNoOrder, earnings});
   }
 
   componentDidUpdate = async (prevProps) => {
-    const { index } = this.props;
-
+    const { market } = this.props;
+    const marketId = market.id;
     if (this.orderbookUpdated(prevProps.market.orderbooks["0"], this.props.market.orderbooks["0"])) {
-      const marketYesOrder = await this.props.fluxProtocol.getMarketOrder(index, 0);
+      const marketYesOrder = await this.props.fluxProtocol.getMarketOrder(marketId, 0);
       this.setState({marketYesOrder});
     }
 
     if (this.orderbookUpdated(prevProps.market.orderbooks["1"], this.props.market.orderbooks["1"])) {
-      const marketNoOrder = await this.props.fluxProtocol.getMarketOrder(index, 1);
+      const marketNoOrder = await this.props.fluxProtocol.getMarketOrder(marketId, 1);
       this.setState({marketNoOrder});
     }
   }
@@ -112,7 +116,7 @@ class Market extends Component {
   }
 
   placeOrder = async (outcome) => {
-    const { index, startLoader, endLoader, getAndUpdateMarkets } = this.props;
+    const { startLoader, endLoader, getAndUpdateMarkets, market } = this.props;
     const { placeOrder } = this.props.fluxProtocol;
     let { spend } = this.state;
 
@@ -124,7 +128,7 @@ class Market extends Component {
       if (spend === "" || spend < 10000) throw "please enter how much you want to spend";
       else {
         const amount = Math.round(spend / price);
-        const res = await placeOrder(index, outcome, amount, price);
+        const res = await placeOrder(market.id, outcome, amount, price);
         // TODO: this shouldnt be triggered here but through events in the future and should only update markets that are changed/relevant
         getAndUpdateMarkets();
         endLoader(res);
@@ -132,6 +136,10 @@ class Market extends Component {
     } else {
       console.error("market contract hasn't been initialized yet, need spinner to load market")
     }
+  }
+
+  claimEarnings = async () => {
+    console.log(await this.props.fluxProtocol.claimEarnings(this.props.market.id));
   }
 
   toDollars(num) {
@@ -170,7 +178,7 @@ class Market extends Component {
         <Allowance >{`allowance: ${allowance && this.toDollars(allowance)}`}</Allowance>
         <Description>{ this.capitalize(market.description) }?</Description>
         {
-          market.resoluted === false &&
+          market.resoluted === false ?
           <>
             <OrderTypeToggle
               toggleOrderType={this.toggleOrderType}
@@ -222,6 +230,11 @@ class Market extends Component {
               />
             </ButtonSection>
         </>
+        : 
+        <div>
+          The outcome is: {fromPayoutDistribution(market.payout_multipliers)}
+          <button onClick={this.claimEarnings}>Claim {this.state.earnings}</button>
+        </div>
         }
       </MarketContainer>
     );

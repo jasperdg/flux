@@ -10,6 +10,7 @@
     "pure-react-carousel": "^1.22.0",
     "react": "^16.9.0",
     "react-countdown-now": "^2.1.1",
+    "react-datetime-picker": "^2.7.1",
     "react-dom": "^16.9.0",
     "react-google-invisible-recaptcha": "^0.2.11",
     "react-player": "^1.13.0",

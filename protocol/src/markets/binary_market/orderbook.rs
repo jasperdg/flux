@@ -189,14 +189,14 @@ impl Orderbook {
 		return (total_filled, matching_order_outcome, matching_orders_owners, matching_orders_filled);
 	}
 
-	pub fn get_open_orders_for_user(&mut self, from: String) -> (Vec<u64>, u64) {
+	pub fn get_open_orders_for_user(&self, from: String) -> (Vec<u64>, u64) {
 		let mut amount_open = 0;
 		let mut orders = vec![];
 
 		for (key, order) in &self.open_orders {
 			if order.owner == from {
 				let amount_to_fill = order.amount - order.amount_filled;
-				amount_open += amount_to_fill * order.price;
+				amount_open += amount_to_fill / order.price;
 				orders.push(*key);
 			}
 		}
