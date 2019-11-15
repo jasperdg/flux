@@ -44,11 +44,17 @@ impl Markets {
 		}
 	}
 
-	pub fn place_order(&mut self, market_id: u64, outcome: u64, amount: u64, price: u64) -> bool {
+	pub fn place_order(&mut self, market_id: u64, outcome: u64, spend: u64, price_per_share: u64) -> bool {
 		let from = env::predecessor_account_id();
-		assert!(amount as u128 <= env::attached_deposit());
+		let shares = (spend * 100) / price_per_share;
+		
+		// println!("spend: {}", spend);
+		// println!("shares purchases: {}", shares);
+
+		assert!(env::attached_deposit() >= spend as u128);
+
 		self.active_markets.entry(market_id).and_modify(|market| {
-			market.place_order(from, outcome, amount, price);
+			market.place_order(from, outcome, shares, spend, price_per_share);
 		});
 		return true;
 	}
@@ -65,14 +71,14 @@ impl Markets {
 		return resoluted;
 	}
 
-	pub fn claim_earnings(&mut self, market_id: u64) -> u64 {
-		let from = env::predecessor_account_id();
-		let mut funds_claimed = 0;
-		self.active_markets.entry(market_id).and_modify(|market| {
-			funds_claimed = market.claim_earnings(from);
-		});
-		return funds_claimed;
-	}
+	// pub fn claim_earnings(&mut self, market_id: u64) -> u64 {
+	// 	let from = env::predecessor_account_id();
+	// 	let mut funds_claimed = 0;
+	// 	self.active_markets.entry(market_id).and_modify(|market| {
+	// 		funds_claimed = market.claim_earnings(from);
+	// 	});
+	// 	return funds_claimed;
+	// }
 
 	pub fn get_earnings(&self, market_id: u64, from: String) -> u64 {
 		return self.active_markets.get(&market_id).unwrap().get_earnings(from);	
@@ -139,13 +145,20 @@ mod tests {
 		let mut context = get_context(500000000);
 		let config = Config::default();
 		testing_env!(context, config);
-		let mut contract = Markets::default();
+		let mut contract = Markets::default(); 
+
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
-		
-		let order_5 = contract.place_order(0, 1, 40000, 40);
-		let order_4 = contract.place_order(0, 0, 60000, 60);
-		contract.resolute(0, vec![10000, 0], false);
-		contract.get_earnings(0, "carol.near".to_string());
+		contract.place_order(0, 0, 23180361, 33);
+		contract.place_order(0, 1, 12367123, 67);
+		contract.place_order(0, 0, 23180361, 33);
+		contract.place_order(0, 1, 12367123, 67);
+		contract.place_order(0, 0, 23180361, 33);
+		contract.place_order(0, 1, 12367123, 67);
+		contract.place_order(0, 0, 23180361, 33);
+		contract.place_order(0, 1, 12367123, 67);
+		contract.resolute(0, vec![5000, 5000], true);
+		let earnings = contract.get_earnings(0, "carol.near".to_string());
+		println!("earnings {}, expected ~ amount: {}", earnings, (23180361 * 4 + 12367123 * 4));
 		// let earnings = contract.claim_earnings(0);
 		// println!("earnings {}", earnings);
 	}

@@ -7,12 +7,15 @@ use near_bindgen::{near_bindgen};
 pub mod order;
 pub type Order = order::Order;
 
+
+//TODO: spend is calcualted so often that it should be stored on the order structs
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Orderbook {
 	pub root: Option<Order>,
 	pub open_orders: BTreeMap<u64, Order>,
 	pub filled_orders: BTreeMap<u64, Order>,
+	pub filled_by_users: BTreeMap<String, u64>, // Should be removed most likely
 	pub market_order: Option<u64>,
 	pub nonce: u64,
 	pub outcome_id: u64
@@ -23,20 +26,24 @@ impl Orderbook {
 		Self {
 			root: None,
 			open_orders: BTreeMap::new(),
-			filled_orders: BTreeMap::new(),
+			filled_by_users: BTreeMap::new(),
+			filled_orders: BTreeMap::new(), // Could be turned into Vec in current design
 			market_order: None,
 			nonce: 0,
 			outcome_id: outcome,
 		}
 	}
 
-	pub fn add_new_order(&mut self,from: String, amount: u64, price: u64, amount_filled: u64) -> bool {
+	pub fn create_order(&mut self, from: String, outcome: u64, shares: u64, price: u64, shares_filled: u64) -> order::Order {
 		let order_id = self.to_order_id();
-		let outcome = self.outcome_id;
-		let mut order = &mut Order::new(from, self.outcome_id, order_id, amount, price, amount_filled, None, None, None);
+		let new_order = order::Order::new(from, outcome, order_id, shares, price, shares_filled, None, None, None);
+		return new_order;
+	}
 
-		if amount == amount_filled {
-			self.add_filled_order(order);
+	pub fn add_new_order(&mut self, order: &mut order::Order) -> bool {
+		self.add_to_user_fill(order.owner.to_string(), order.amount_filled);
+		if order.amount == order.amount_filled {
+			self.filled_orders.insert(order.id, order.clone());
 			return true;
 		} 
 		let updated_order = self.add_order(order);
@@ -52,10 +59,6 @@ impl Orderbook {
 		return true
 	}
 
-	pub fn add_filled_order(&mut self, order: &mut Order) -> Order {
-		self.filled_orders.insert(order.id, order.to_owned());
-		return order.to_owned();
-	}
 
 	pub fn add_order(&mut self, order: &mut Order) -> Order {
 		let is_first_order = self.root.is_none();
@@ -87,7 +90,7 @@ impl Orderbook {
 	}
 
 	pub fn remove(&mut self, order_id: u64) -> &bool {
-		let mut order = self.open_orders.get(&order_id).unwrap().to_owned();
+		let order = self.open_orders.get(&order_id).unwrap().to_owned();
 		self.open_orders.remove(&order_id);
 		let has_parent_order_id = !order.prev.is_none();
 		let has_worse_order_id = !order.worse_order_id.is_none();
@@ -125,105 +128,102 @@ impl Orderbook {
 		return &true;
 	}
 
-	pub fn fill_matching_orders(&mut self, amount: u64, price: u64) -> (u64, u64, Vec<String>, Vec<u64>) {
-		let mut root = self.root.as_ref().unwrap();
-		let mut total_filled = 0;
-		let mut to_fill = amount;
-		let matching_price = 100 - price; // Price of 1 set - the bid
-		let mut match_optional = self.find_order_by_price(&root, matching_price);
-		let mut match_exists = !match_optional.is_none();
-		let mut matching_orders_owners = vec![];
-		let mut matching_orders_filled = vec![];
-		// TODO: This would have tot urn into an array to ad catregorical markets
-		let mut matching_order_outcome = 0;
-		while match_exists && total_filled < amount {
-			let matching_order_id = match_optional.unwrap();
+	pub fn fill_matching_orders(&mut self, amount_of_shares: u64, price: u64) -> u64 {
+		let root_optional = self.root.as_ref();
+		if amount_of_shares == 0 || root_optional.is_none() { return amount_of_shares }
+		let matching_price = 100 - price;
+		let root = root_optional.unwrap();
+		let matching_order_id_optional = self.get_order_by_price(&root, matching_price);
+		
+		if matching_order_id_optional.is_none() { return amount_of_shares }
+		
+		let matching_order_id = matching_order_id_optional.unwrap();
+		let matching_order = self.open_orders.get(&matching_order_id).unwrap();
+		let match_shares_to_fill = matching_order.amount - matching_order.amount_filled;
 
-			// Fill orders accordingly
-			self.open_orders.entry(matching_order_id).and_modify(|matching_order| {
-				let match_amount_fillable = matching_order.amount - matching_order.amount_filled;
-				if match_amount_fillable >= to_fill {
-					total_filled += to_fill;
-					matching_order.amount_filled += to_fill;
-					matching_orders_filled.push(to_fill);
-					to_fill = 0;
-				}
-				else {
-					total_filled += match_amount_fillable;
-					matching_order.amount_filled += match_amount_fillable;
-					matching_orders_filled.push(match_amount_fillable);
-					to_fill -= match_amount_fillable;
-				}
-			});
-
-			let matching_order_after_fill = self.open_orders.get(&matching_order_id).unwrap();
-			matching_orders_owners.push(matching_order_after_fill.owner.to_string());
-
-			matching_order_outcome = matching_order_after_fill.outcome;
-			self.filled_orders.insert(matching_order_id, matching_order_after_fill.clone());
-
-			// If a matching order is filled delete it from open_orders and push it to filled_orders
-			if matching_order_after_fill.clone().amount_filled == matching_order_after_fill.clone().amount {
-				assert_eq!(self.remove(matching_order_id), &true);
-				if !self.market_order.is_none() && self.market_order.unwrap() == matching_order_id {
-					let new_market_order =  self.get_new_market_order(None);
-					if new_market_order.is_none() {
-						self.market_order = None;
-					}
-					else {
-						self.market_order = Some(new_market_order.unwrap().id);
-					}
-				}
-			}
-
-			if !self.root.is_none() {
-				root = self.root.as_ref().unwrap();
-				match_optional = self.find_order_by_price(&root, price);
-				match_exists = !match_optional.is_none();
-			} else {
-				match_exists = false;
-
-			}
+		let to_fill;
+		if match_shares_to_fill >= amount_of_shares {
+			to_fill = amount_of_shares;
+		} 
+		else {
+			to_fill = match_shares_to_fill;
 		}
+	
+		let matching_order_id = matching_order.id.clone();
+		let matching_order_owner = matching_order.owner.to_string();
+		self.fill_order(matching_order_id, to_fill);
+		let spend = to_fill * price;
+		self.add_to_user_fill(matching_order_owner.to_string(), spend);
+		let left_to_fill = amount_of_shares - to_fill;
 
-		return (total_filled, matching_order_outcome, matching_orders_owners, matching_orders_filled);
+		return self.fill_matching_orders(left_to_fill, price);
 	}
 
-	pub fn get_open_orders_for_user(&self, from: String) -> (Vec<u64>, u64) {
-		let mut amount_open = 0;
-		let mut orders = vec![];
 
-		for (key, order) in &self.open_orders {
+
+	fn fill_order(&mut self, order_id: u64, fill_amount: u64) {
+		let mut filled = false;
+		self.open_orders.entry(order_id).and_modify( |order| {
+			order.amount_filled += fill_amount;
+			if order.amount_filled == order.amount { filled = true; }
+		});
+		
+		if filled {
+			let order_copy = self.open_orders.get(&order_id).unwrap().clone();
+			self.filled_orders.insert(order_id, order_copy);
+			self.remove(order_id);
+		}
+	}
+
+	fn add_to_user_fill(&mut self, owner: String, amount_filled: u64) {
+		if let Some(fill_balance) = self.filled_by_users.get_mut(&owner) {
+			*fill_balance += amount_filled;
+		} else {
+			self.filled_by_users.insert(owner.to_string(), amount_filled);
+		}
+	}
+
+	pub fn get_earnings(&self, from: String) ->  (u64, u64) {
+		let mut earnings = 0;
+		let mut value_in_open_orders = 0;
+
+		println!("{}. open orders: {:?}", self.outcome_id, self.open_orders);
+		for (_key, order) in &self.open_orders {
 			if order.owner == from {
-				let amount_to_fill = order.amount - order.amount_filled;
-				amount_open += amount_to_fill / order.price;
-				orders.push(*key);
+				earnings += order.amount_filled * 100;
+				value_in_open_orders += (order.amount - order.amount_filled) * order.price;
 			}
 		}
 
-		return (orders, amount_open);
+		println!("{}. filled orders: {:?}", self.outcome_id, self.filled_orders);
+		for(_key, order) in &self.filled_orders {
+			if order.owner == from {
+				earnings += order.amount_filled * 100;
+			}
+		}
+
+		return (value_in_open_orders, earnings);
 	}
 
 	pub fn remove_orders(&mut self, orders: Vec<u64>) {
 		for order_id in orders {
 			self.remove(order_id);
 		}
-		
 	}
 
-	pub fn find_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
+	pub fn get_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
 		if current_order.price == target_price {
 			return Some(current_order.id);
 		}
 		else if current_order.price < target_price && !current_order.better_order_id.is_none() {
 			let next_order_id = current_order.better_order_id.as_ref().unwrap();
 			let next_order = &mut self.open_orders.get(next_order_id).unwrap();
-			return self.find_order_by_price(next_order, target_price);
+			return self.get_order_by_price(next_order, target_price);
 		} 
 		else if current_order.price > target_price && !current_order.worse_order_id.is_none() {
 			let next_order_id = current_order.worse_order_id.as_ref().unwrap();
 			let next_order = &mut self.open_orders.get(next_order_id).unwrap();
-			return self.find_order_by_price(next_order, target_price);		
+			return self.get_order_by_price(next_order, target_price);		
 		}
 		return None;
 	}
