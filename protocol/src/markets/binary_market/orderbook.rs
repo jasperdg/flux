@@ -15,7 +15,6 @@ pub struct Orderbook {
 	pub root: Option<Order>,
 	pub open_orders: BTreeMap<u64, Order>,
 	pub filled_orders: BTreeMap<u64, Order>,
-	pub filled_by_users: BTreeMap<String, u64>, // Should be removed most likely
 	pub market_order: Option<u64>,
 	pub nonce: u64,
 	pub outcome_id: u64
@@ -41,7 +40,6 @@ impl Orderbook {
 	}
 
 	pub fn add_new_order(&mut self, order: &mut order::Order) -> bool {
-		self.add_to_user_fill(order.owner.to_string(), order.amount_filled);
 		if order.amount == order.amount_filled {
 			self.filled_orders.insert(order.id, order.clone());
 			return true;
@@ -152,8 +150,6 @@ impl Orderbook {
 		let matching_order_id = matching_order.id.clone();
 		let matching_order_owner = matching_order.owner.to_string();
 		self.fill_order(matching_order_id, to_fill);
-		let spend = to_fill * price;
-		self.add_to_user_fill(matching_order_owner.to_string(), spend);
 		let left_to_fill = amount_of_shares - to_fill;
 
 		return self.fill_matching_orders(left_to_fill, price);
@@ -174,15 +170,7 @@ impl Orderbook {
 			self.remove(order_id);
 		}
 	}
-
-	fn add_to_user_fill(&mut self, owner: String, amount_filled: u64) {
-		if let Some(fill_balance) = self.filled_by_users.get_mut(&owner) {
-			*fill_balance += amount_filled;
-		} else {
-			self.filled_by_users.insert(owner.to_string(), amount_filled);
-		}
-	}
-
+	
 	pub fn get_earnings(&self, from: String) ->  (u64, u64) {
 		let mut earnings = 0;
 		let mut value_in_open_orders = 0;
