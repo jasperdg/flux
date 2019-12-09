@@ -159,7 +159,7 @@ mod tests {
 
 
 	#[test]
-	fn test_claimable_amount_invalid_market() {
+	fn test_invalid_market() {
 		testing_env!(get_context("carol.near".to_string()), Config::default());
 		
 		let mut contract = Markets::default(); 
@@ -176,30 +176,34 @@ mod tests {
 		assert_eq!(carol_earnings, 40000);
 		let bob_earnings = contract.get_earnings(0, "bob.near".to_string());
 		assert_eq!(bob_earnings, 60000);
-	}
 
+		contract.claim_earnings(0);
+	}
+	
 	#[test]
-	fn test_claimable_amount_valid_market() {
+	fn test_valid_market() {
 		testing_env!(get_context("carol.near".to_string()), Config::default());
 		
 		let mut contract = Markets::default(); 
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 		
 		contract.place_order(0, 0, 40000, 40);
-
+		
 		testing_env!(get_context("bob.near".to_string()), Config::default());
 		contract.place_order(0, 1, 60000, 60);
-
+		
 		testing_env!(get_context("carol.near".to_string()), Config::default());
 		contract.resolute(0, vec![10000, 0], false);
 		let carol_earnings = contract.get_earnings(0, "carol.near".to_string());
 		assert_eq!(carol_earnings, 100000);
 		let bob_earnings = contract.get_earnings(0, "bob.near".to_string());
 		assert_eq!(bob_earnings, 0);
-
+		
 		println!("carol: {}, bob: {}", carol_earnings, bob_earnings);
+		
+		contract.claim_earnings(0);
 	}
-
+	
 
 	#[test]
 	fn test_get_open_orders() {
