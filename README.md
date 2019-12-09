@@ -2,7 +2,7 @@
 This is the working monorepo development of the Flux and demo application.
 
 ## Index
-`/deployment` - In this directory we have the tools for deploying contracts to NEAR testnet
+`/deployment` - Can be used to deploy new contracts or interact with live versions of NEAR contracts
 
 `/frontend` - Depricated demo app
 
