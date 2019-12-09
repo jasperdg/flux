@@ -1,5 +1,5 @@
 (function() {
-    const CONTRACT_NAME = 'flux-protocol1';
+    const CONTRACT_NAME = 'near-hello-devnet'; /* TODO: fill this in! */
     const DEFAULT_ENV = 'development';
 
     function getConfig(env) {
@@ -49,6 +49,13 @@
                 nodeUrl: 'http://staging-shared-test.nearprotocol.com:3030',
                 contractName: CONTRACT_NAME,
                 masterAccount: 'test.near',
+            };
+        case 'tatooine':
+            return {
+                networkId: 'tatooine',
+                nodeUrl: 'https://rpc.tatooine.nearprotocol.com',
+                contractName: CONTRACT_NAME,
+                walletUrl: 'https://wallet.tatooine.nearprotocol.com',
             };
         default:
             throw Error(`Unconfigured environment '${env}'. Can be configured in src/config.js.`);

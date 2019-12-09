@@ -17,7 +17,7 @@ const ClearNav = styled(Dot) `
 `
 
 const DotsContainer = styled.ul`
-	position: relative;
+	/* position: relative; */
 	display: flex;
 	margin: 0 auto ;
 	padding: 0;

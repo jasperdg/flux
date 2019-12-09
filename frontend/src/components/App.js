@@ -45,7 +45,6 @@ class App extends Component {
   formatMarkets = (markets) => {
     const formattedMarkets = [];
     for (const marketId in markets) {
-      console.log(marketId);
       const market = markets[marketId];
       formattedMarkets.push(market);
     }

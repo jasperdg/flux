@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
 
 pub mod orderbook;
+type Order = orderbook::Order;
 
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
@@ -38,6 +39,22 @@ impl BinaryMarket {
 		}
 	}
 
+	pub fn get_open_orders_for_user(&self, from: String, outcome: u64) -> Vec<Order>{
+		let new_orderbook = orderbook::Orderbook::new(outcome);
+		let orderbook = self.orderbooks.get(&outcome).unwrap_or(&new_orderbook);
+		let open_orders = orderbook.get_open_orders_for_user(from);
+
+		return open_orders;
+	}
+
+	pub fn get_filled_orders_for_user(&self, from: String, outcome: u64) -> Vec<Order>{
+		let new_orderbook = orderbook::Orderbook::new(outcome);
+		let orderbook = self.orderbooks.get(&outcome).unwrap_or(&new_orderbook);
+		let filled_orders = orderbook.get_filled_orders_for_user(from);
+
+		return filled_orders;
+	}
+
 	// Order filling and keeping track of spendages is way to complicated for now.
 	pub fn place_order(&mut self, from: String, outcome: u64, shares: u64, spend: u64, price_per_share: u64) -> bool {
 		assert_eq!(self.resoluted, false);
@@ -60,14 +77,6 @@ impl BinaryMarket {
 			orderbook.add_new_order(order);
 		});
 	}
-	
-	fn cancel_order(&mut self, outcome: u64, order_id: &u64 ) -> bool{
-		if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {
-			orderbook.get_mut().remove(*order_id);
-			return true;
-		}
-		return false;
-	}
 
 	pub fn resolute(&mut self, payout: Vec<u64>, invalid: bool) {
 		// TODO: Make sure market can only be resoluted after end time
@@ -79,15 +88,27 @@ impl BinaryMarket {
 		self.invalid = Some(invalid);
 		self.resoluted = true;
 	}
-		
-	// 	if claimable_amount > 0 {
-	// 		let promise_idx = env::promise_batch_create(&from);
-	// 		env::promise_batch_action_transfer(promise_idx, claimable_amount as u128);
-	// 	} 
-	// 	return claimable_amount;
-	// }
+	
+	// Try and remove dups
+	pub fn claim_earnings(&mut self, from: String) {
+		assert!(!self.payout_multipliers.is_none() && !self.invalid.is_none());		
+		assert_eq!(self.resoluted, true);
+		let mut claimable_amount = 0;
 
-	pub fn get_earnings(&self, from: String) -> u64 {
+		for outcome in 0..self.outcomes {
+			let new_orderbook = &mut orderbook::Orderbook::new(outcome);
+			let orderbook = self.orderbooks.get_mut(&outcome).unwrap_or(new_orderbook);
+			let (open_interest, earnings) = orderbook.get_and_delete_earnings(from.to_string(), self.invalid.unwrap());
+			claimable_amount += self.calc_claimable_amount(outcome, open_interest, earnings);
+		}
+
+		if claimable_amount > 0 {
+			let promise_idx = env::promise_batch_create(&from);
+			env::promise_batch_action_transfer(promise_idx, claimable_amount as u128);
+		} 
+	}
+
+	pub fn get_earnings(&self, from: String, and_claim: bool) -> u64 {
 		assert!(!self.payout_multipliers.is_none() && !self.invalid.is_none());		
 		assert_eq!(self.resoluted, true);
 
@@ -96,13 +117,30 @@ impl BinaryMarket {
 		for outcome in 0..self.outcomes {
 			let new_orderbook = orderbook::Orderbook::new(outcome);
 			let orderbook = self.orderbooks.get(&outcome).unwrap_or(&new_orderbook);
-			let (open_interest, earnings) = orderbook.get_earnings(from.to_string());
-			println!("open interest: {} , earnings: {}", open_interest, earnings);
-			let payout_multiplier = self.payout_multipliers.as_ref().unwrap()[outcome as usize];
-			claimable_amount += open_interest + (earnings * payout_multiplier / 10000);
+			let (open_interest, earnings, _open_orders_to_delete, _filled_orders_to_delete) = orderbook.get_earnings(from.to_string(), and_claim, self.invalid.unwrap());
+			claimable_amount += self.calc_claimable_amount(outcome, open_interest, earnings);
 		}
 
 		return claimable_amount / 100;
+	}
+
+	fn cancel_order(&mut self, outcome: u64, order_id: &u64 ) -> bool{
+		if let Entry::Occupied(mut orderbook) = self.orderbooks.entry(outcome) {
+			orderbook.get_mut().remove(*order_id);
+			return true;
+		}
+		return false;
+	}
+
+	fn calc_claimable_amount(&self, outcome: u64, open_interest: u64, potential_earnings: u64) -> u64 {
+		let payout_multiplier = self.payout_multipliers.as_ref().unwrap()[outcome as usize];
+		let mut earnings = 0;
+		if self.invalid.unwrap() {
+			earnings = potential_earnings;
+		} else {
+			earnings = potential_earnings * payout_multiplier / 10000;
+		}
+		return earnings + open_interest;
 	}
 
 	fn to_user_outcome_id(&self, user: String, outcome: u64) -> String {

@@ -28,7 +28,7 @@ const LoadingText = styled(Text)`
 function Loader(props) {
 
 	return (
-	  props.isActive && <Modal>
+	  props.isActive && <Modal width={"35%"} height={"100px"} blackground={true}>
 		  {props.txRes !== null 
 			  ? 
 			  <ResText >{props.txRes === true ? "success" : "failed" }</ResText>

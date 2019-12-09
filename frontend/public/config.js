@@ -1,5 +1,5 @@
 (function() {
-    const CONTRACT_NAME = 'flux-test5';
+    const CONTRACT_NAME = 'flux-test6';
     const DEFAULT_ENV = 'development';
 
     function getConfig(env) {

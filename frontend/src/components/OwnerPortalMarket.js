@@ -6,7 +6,6 @@ import { fromPayoutDistribution } from '../utils/utils';
 
 // TODO: Set outcomes with button clicks: Resolute; Yes, No or invalid
 // TODO: Allow market delition
-
 const Market = styled.div`
 
 `;
@@ -14,12 +13,14 @@ const Market = styled.div`
 
 export default ({ market, fluxProtocol, getAndUpdateMarkets }) => {
 	const deleteMarket = async () => {
+		console.log("deleting...");
 		const res = await fluxProtocol.deleteMarket(market.id);
 		getAndUpdateMarkets();
 	}
 
 	const resolute = async (payoutDistribution) => {
 		let invalid = payoutDistribution[0] === 5000 ? true : false;
+		console.log("resoluting...");
 		await fluxProtocol.resoluteMarket(market.id, payoutDistribution, invalid);
 		getAndUpdateMarkets();
 	}

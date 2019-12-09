@@ -1,19 +1,5 @@
-import React from 'react';
+import React, {useState} from 'react';
 import styled from 'styled-components';
-
-
-const ModalContainer = styled.div`
-	background-color: white;
-	width: 35%;
-	position: absolute;
-	left: calc(32.5% - 7.5px);
-	top: 40%;
-	border-radius: 6px;
-	padding: 15px;
-	height: 100px;
-	/* position: relative; */
-	z-index: 102;
-`
 
 const Blackground = styled.div`
 	position: absolute;
@@ -24,16 +10,30 @@ const Blackground = styled.div`
 	background-color: rgba(0, 0, 0, 0.3);
 	z-index: 101;
 `
-function Modal({className, children}) {
+function Modal({className, children, width, height, blackground, onBlackgroundClick}) {
 
+	const ModalContainer = styled.div`
+		background-color: white;
+		width: ${width};
+		position: absolute;
+		left: calc(50% - ${width} / 2 - 16px);
+		top: calc(50% - ${height} / 2 - 16px);
+		border-radius: 6px;
+		padding: 16px;
+		height: ${height};
+		z-index: 102;
+		-webkit-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+  	-moz-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+  	box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+	`
 	return (
-		<Blackground >
+		<>
+			{blackground && <Blackground onClick={onBlackgroundClick}/>}
 			<ModalContainer className={className}>
-			{children}
+				{children}
 			</ModalContainer>
-		</Blackground>
+		</>
 	);
-
 }
 
 

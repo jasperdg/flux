@@ -8,6 +8,7 @@ import MarketButton from './MarketButton';
 import styled from 'styled-components';
 import { BLUE, PINK } from '../constants';
 import { fromPayoutDistribution } from '../utils/utils';
+import OrdersModal from './OrdersModal';
 
 const MarketContainer = styled.div`
   width: 90%;
@@ -22,6 +23,7 @@ const MarketContainer = styled.div`
   -moz-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
   box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
   margin-left: 5%;
+  overflow: hidden;
 `;
 
 const ButtonSection = styled.div`
@@ -54,7 +56,8 @@ class Market extends Component {
       spend: 0,
       marketNoOrder: null,
       marketYesOrder: null,
-      earnings: ""
+      earnings: "",
+      showOrders: true,
     }
   }
 
@@ -66,7 +69,6 @@ class Market extends Component {
     const marketNoOrder = await getMarketOrder(market.id, 1);
     if (market.resoluted) {
       earnings = await getEarningsAmount(market.id);
-
     }
     this.setState({marketYesOrder, marketNoOrder, earnings});
   }
@@ -124,11 +126,10 @@ class Market extends Component {
     spend = spend * (10 ** 6);
     const price = this.getPrice(outcome);
     if (placeOrder) {
-      startLoader();
       if (spend === "" || spend < 10000) throw "please enter how much you want to spend";
       else {
-        const amount = Math.round(spend / price);
-        const res = await placeOrder(market.id, outcome, amount, price);
+        startLoader();
+        const res = await placeOrder(market.id, outcome, spend, price);
         // TODO: this shouldnt be triggered here but through events in the future and should only update markets that are changed/relevant
         getAndUpdateMarkets();
         endLoader(res);
@@ -167,8 +168,8 @@ class Market extends Component {
   }
 
   render() {
-    const { market } = this.props;
-    const { allowance } = this.props.fluxProtocol;
+    const { market, fluxProtocol } = this.props;
+    const { allowance } = fluxProtocol;
     const { marketNoOrder, marketYesOrder, limitPrice } = this.state;
     const isMarketOrder = this.state.orderType === "market";
 
@@ -207,8 +208,10 @@ class Market extends Component {
               renderer={CountDownTimer}
             />
 
-            <ButtonSection>
+            <button onClick={() => this.setState({showOrders: !this.state.showOrders})}>Orders</button>
+            { this.state.showOrders && <OrdersModal fluxProtocol={fluxProtocol} market={market} onBlackgroundClick={() => this.setState({showOrders: false})}/>}
 
+            <ButtonSection>
               <MarketButton 
                 theme={PINK}
                 earnings={this.calculateEarnings(marketNoOrder)}
