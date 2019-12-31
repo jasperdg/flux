@@ -33,11 +33,11 @@ impl Markets {
 		// }
 	}
 
-	pub fn delete_market(&mut self, id: u64) -> bool {
+	pub fn delete_market(&mut self, market_id: u64) -> bool {
 		let from = env::predecessor_account_id();
 
 		if  from == self.creator {
-			self.active_markets.remove(&id);
+			self.active_markets.remove(&market_id);
 			return true;
 		} else {
 			return false;
@@ -47,7 +47,7 @@ impl Markets {
 	pub fn place_order(&mut self, market_id: u64, outcome: u64, spend: u64, price_per_share: u64) -> bool {
 		let from = env::predecessor_account_id();
 		let shares = (spend * 100) / price_per_share;
-		assert!(env::attached_deposit() >= spend as u128);
+		// assert!(env::attached_deposit() >= spend as u128); // Commend out for shell
 
 		self.active_markets.entry(market_id).and_modify(|market| {
 			market.place_order(from, outcome, shares, spend, price_per_share);
@@ -111,7 +111,7 @@ impl Markets {
 impl Default for Markets {
 	fn default() -> Self {
 		Self {
-			creator: env::predecessor_account_id(),
+			creator: "klopt".to_string(),
 			active_markets: BTreeMap::new(),
 			nonce: 0
 		}

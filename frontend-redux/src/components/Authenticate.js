@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { getAuthStatus } from '../actions/authActions';
 import isMobileDevice from '../utils/isMobileDevice';
 import DesktopSplash from './DesktopSplash';
+import LoadingScreen from './LoadingScreen';
 
 function Authenticate({dispatch, success, loading, error,...props}) {
 	useEffect(() => {
@@ -11,9 +12,9 @@ function Authenticate({dispatch, success, loading, error,...props}) {
 	}, []);
 
 	const mobile = isMobileDevice();
-	if (!mobile) return <DesktopSplash/>;
-	if (loading) return <div>loading...</div>;
-	if (success) return <App/>;
+	if (loading) return <LoadingScreen />;
+	if (!mobile) return <DesktopSplash />;
+	if (success) return <App />;
 	else return <div>denied</div>
 }
 

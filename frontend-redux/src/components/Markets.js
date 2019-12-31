@@ -4,6 +4,7 @@ import 'pure-react-carousel/dist/react-carousel.es.css';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import Market from './Market';
+import Spinner from './Spinner';
 
 const MarketsContainer = styled.div`
   width: 100%;
@@ -12,9 +13,14 @@ const MarketsContainer = styled.div`
   margin: 0 auto;
 `
 
-const ClearNav = styled(Dot) `
+const ClearNav = styled(Dot)`
   border: none;
   background-color: transparent;
+`
+
+const StyledSpinner  = styled(Spinner)`
+	left: calc(50% - 32px);
+	top: calc(50% - 32px);
 `
 
 const DotsContainer = styled.ul`
@@ -65,7 +71,7 @@ const DotsContainer = styled.ul`
   }
 `
 
-const Markets = ({markets}) => {
+const Markets = ({markets, loading}) => {
 	let [containerWidth, setContainerWidth] = useState(0)
 	let [containerHeight, setContainerHeight] = useState(0)
 	const marketsContainer = createRef();
@@ -75,46 +81,52 @@ const Markets = ({markets}) => {
 		setContainerHeight(marketsContainer.current.clientHeight);
 	}, []);
 
-	console.log(containerHeight, containerWidth)
 	return (
 		<MarketsContainer ref={marketsContainer} id="markets-container">
-			<CarouselProvider
-			naturalSlideWidth={containerWidth}
-			naturalSlideHeight={containerHeight}
-			totalSlides={markets.length}
-			>
-				<Slider>
-					{
-						markets.map((market, i) => (
-							<Slide key={i} index={i}>
-								<Market market={market} key={i}/>
-							</Slide>
-						))
-					}
-				</Slider>
-				
 
-				<DotsContainer>
-					{
-						
-						markets.map((market, i) => {
-							return (
-								<ClearNav key={i} slide={i}>
-									<li>
-										<a/>
-									</li>
-								</ClearNav>
-							)
-						})
-					}
-				</DotsContainer>
-				
-			</CarouselProvider>
+			{
+				loading ? 
+				<StyledSpinner /> 
+				:
+				<CarouselProvider
+				naturalSlideWidth={containerWidth}
+				naturalSlideHeight={containerHeight}
+				totalSlides={markets.length}
+				>
+					<Slider>
+						{
+							markets.map((market, i) => (
+								<Slide key={i} index={i}>
+									<Market market={market} key={i}/>
+								</Slide>
+							))
+						}
+					</Slider>
+					
+
+					<DotsContainer>
+						{
+							
+							markets.map((market, i) => {
+								return (
+									<ClearNav key={i} slide={i}>
+										<li>
+											<a/>
+										</li>
+									</ClearNav>
+								)
+							})
+						}
+					</DotsContainer>
+					
+				</CarouselProvider>
+			}
 		</MarketsContainer>
 	);
 }
 
 const mapStateToProps = (state) => ({
-	markets: state.markets.markets
+	markets: state.markets.markets,
+	loading: state.markets.loading
 })
 export default connect(mapStateToProps)(Markets);

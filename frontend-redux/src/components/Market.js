@@ -7,7 +7,7 @@ import MarketInput from './MarketInput';
 import MarketButton from './MarketButton';
 import styled from 'styled-components';
 import { BLUE, PINK } from '../constants';
-// import { fromPayoutDistribution } from '../utils/utils';
+import { fromPayoutDistribution } from '../utils/unitConvertion';
 // import OrdersModal from './OrdersModal';
 import { capitalize } from '../utils/stringManipulation';
 import { connect } from 'react-redux';
@@ -50,7 +50,7 @@ const Allowance = styled.span`
   margin-top: 10px;
 `;
 
-function Market({market, account, dispatch}) {
+function Market({market, accountData, dispatch, contract}) {
 	let lastElement;
 
 	const [orderType, setOrderType] = useState("market")
@@ -73,7 +73,6 @@ function Market({market, account, dispatch}) {
     }
     lastElement = document.activeElement;
 	}
-	console.log(market);
 	const order = {
 		spend,
 		odds
@@ -81,7 +80,7 @@ function Market({market, account, dispatch}) {
 
 	return (
 		<MarketContainer onClick={ifLastElemIsInputBlur}>
-			<Allowance >{`allowance: ${account && toDollars(account.allowance)}`}</Allowance>
+			<Allowance >{`allowance: ${accountData && toDollars(accountData.allowance)}`}</Allowance>
 			<Description>{ capitalize(market.description) }?</Description>
 			{
 				!market.resoluted ? 
@@ -104,49 +103,51 @@ function Market({market, account, dispatch}) {
                 />
               )
             }
+
+					<Countdown
+						zeroPadTime={2}
+						date={market.end_time}
+						renderer={CountdownTimer}
+					/>
+					<ButtonSection>
+						<MarketButton 
+							theme={PINK}
+							marketId={market.id}
+							earnings={toEarnings(order)}
+							marketOrder = {market.marketOrders[0]}
+							orderType={orderType}
+							odds={odds}
+							label="no"
+							placeOrder={() => dispatch(placeOrder(contract, accountData.account, accountData.accountId, market.id, 0, order))}
+							/>
+
+						<MarketButton 
+							theme={BLUE}
+							marketId={market.id}
+							earnings={toEarnings(order)}
+							marketOrder = {market.marketOrders[1]}
+							orderType={orderType}
+							odds={odds}
+							label="yes"
+							placeOrder={() => dispatch(placeOrder(contract, accountData.account, accountData.accountId, market.id, 1, order))}
+						/>
+					</ButtonSection>
 				</>
 				:
-				null
+				<div>
+					The outcome is: {fromPayoutDistribution(market.payout_multipliers)}
+					<button onClick={claimEarnings}>Claim 0</button>
+				</div>
 			}
-
-			<Countdown
-				zeroPadTime={2}
-				date={market.end_time}
-				renderer={CountdownTimer}
-			/>
-
-			<ButtonSection>
-				<MarketButton 
-					theme={PINK}
-					marketId={market.id}
-					earnings={toEarnings(order)}
-					marketOrder = {market.marketOrders[0]}
-					// isMarketOrder={isMarketOrder}
-					// limitPrice={limitPrice}
-					label="no"
-					placeOrder={() => dispatch(placeOrder(market.id, 0, order))}
-				/>
-
-				<MarketButton 
-					theme={BLUE}
-					marketId={market.id}
-					earnings={toEarnings(order)}
-					marketOrder = {market.marketOrders[1]}
-					// isMarketOrder={isMarketOrder}
-					// limitPrice={limitPrice}
-					label="yes"
-					placeOrder={() => dispatch(placeOrder(market.id, 1, order))}
-				/>
-			</ButtonSection>
-
 		</MarketContainer>
 	)
 }
 
 
 const mapStateToProps = (state) => ({
-	account: state.account,
-	orderType: state.market.orderType
+	accountData: state.account,
+	orderType: state.market.orderType,
+	contract: state.near.contract
 })
 
 export default connect(mapStateToProps)(Market);

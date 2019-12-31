@@ -1,12 +1,15 @@
 
 import { 
-	INIT
+	INIT,
+	GOT_OWNER
 } from "../actions/nearActions";
 
 const initialState = {
 	near: null,
 	contract: null,
 	walletAccount: null,
+	loading: true,
+	owner: null,
 }
 
 export default function nearReducer(state = initialState, action) {
@@ -17,6 +20,12 @@ export default function nearReducer(state = initialState, action) {
 				near: action.payload.near,
 				walletAccount: action.payload.walletAccount,
 				contract: action.payload.contract,
+				loading: false,
+			}
+		case GOT_OWNER: 
+			return {
+				...state,
+				owner: action.payload.owner
 			}
 		default: 
 			return state;

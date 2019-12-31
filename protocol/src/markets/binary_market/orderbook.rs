@@ -15,7 +15,7 @@ pub struct Orderbook {
 	pub root: Option<Order>,
 	pub open_orders: BTreeMap<u64, Order>,
 	pub filled_orders: BTreeMap<u64, Order>,
-	pub market_order: Option<u64>,
+	pub market_order: Option<Order>,
 	pub nonce: u64,
 	pub outcome_id: u64
 }
@@ -47,10 +47,10 @@ impl Orderbook {
 
 		let market_order = self.get_market_order();
 		if !self.market_order.is_none() && updated_order.price > market_order.unwrap().price {
-			self.market_order = Some(updated_order.id);
+			self.market_order = Some(updated_order);
 		} 
 		else if self.market_order.is_none() {
-			self.market_order = Some(updated_order.id);
+			self.market_order = Some(updated_order);
 		}
 
 		return true
@@ -64,7 +64,7 @@ impl Orderbook {
 			order.prev = None;
 			self.root = Some(order.clone());
 			self.open_orders.insert(order.id, order.clone());
-			self.market_order = Some(order.id);
+			self.market_order = Some(order.clone());
 			return order.to_owned();
 		}
 
@@ -295,7 +295,8 @@ impl Orderbook {
 
 	pub fn get_market_order(&self) -> Option<&Order> {
 		if !self.market_order.is_none() {
-			return Some(self.open_orders.get(&self.market_order.unwrap()).unwrap());
+			let market_order = self.market_order.as_ref().unwrap();
+			return Some(market_order);
 		} else {
 			return None
 		}

@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const MarketButton = ({theme, marketOrder, label, placeOrder, earnings}) => {
-		/* background-color: ${(marketOrder && isMarketOrder) || !isMarketOrder ? theme : 'grey'}; */
+const MarketButton = ({theme, marketOrder, placeOrder, orderType, odds, label, earnings}) => {
 	const Button = styled.button`
+		background-color: ${(marketOrder && orderType === "market") || (orderType === "limit") ? theme : 'grey'};
 		width: 100%;
 		padding: 25px;
 		border: none;
@@ -24,17 +24,27 @@ const MarketButton = ({theme, marketOrder, label, placeOrder, earnings}) => {
 	const MarketButtonWrapper = styled.div`
 		width: 47%;
 	`
-	const outcome = label === "no" ? 0 : 1;
+	let buyPrice;
+	if (orderType === "market") {
+		if (marketOrder) {
+			buyPrice = 100 - marketOrder.price;
+		}
+		else {
+			buyPrice = "-"
+		}
+	} else {
+		buyPrice = odds;
+	}
+
 	return (
 		<MarketButtonWrapper>
 			<Earnings>Potential winnings: ${earnings}</Earnings>
 
 			<Button 
-				onClick={placeOrder} 
+				onClick={ placeOrder } 
 				type="submit"
 			>
-				{/* {`${label} }@ ${ isMarketOrder ? marketOrder && 100 - marketOrder.price : limitPrice}`} */}
-				{`${label}`}
+				{`${label} @ ${ buyPrice}`}
 			</Button>
 		</MarketButtonWrapper>
 	)

@@ -52,7 +52,6 @@ export const initializeAccount = (near, walletAccount) => {
 	}
 }
 
-
 export const signIn = (walletAccount) => {
 	walletAccount.requestSignIn(
 		window.nearConfig.contractName,
