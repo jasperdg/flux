@@ -38,7 +38,7 @@ export const initializeAccount = (near, walletAccount) => {
 
 		let account, accountState, allowance = null;
 		if (isSignedIn) {
-			account = await near.account(accountId); // Loads super slow -> seperate from intialization.
+			account = await near.account(accountId); 
 			accountState = await account.state();
 			allowance = account._accessKey.permission.FunctionCall.allowance;
 		}

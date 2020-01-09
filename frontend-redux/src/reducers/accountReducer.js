@@ -9,7 +9,7 @@ const initialState = {
 	accountId: null,
 	accountState: null,
 	allowance: null,
-	isSignedIn: null
+	isSignedIn: null,
 }
 
 export default function nearReducer(state = initialState, action) {

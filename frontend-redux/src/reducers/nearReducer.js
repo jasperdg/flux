@@ -10,6 +10,7 @@ const initialState = {
 	walletAccount: null,
 	loading: true,
 	owner: null,
+	daiBalance: null,
 }
 
 export default function nearReducer(state = initialState, action) {
@@ -25,7 +26,8 @@ export default function nearReducer(state = initialState, action) {
 		case GOT_OWNER: 
 			return {
 				...state,
-				owner: action.payload.owner
+				owner: action.payload.owner,
+				daiBalance: action.payload.daiBalance,
 			}
 		default: 
 			return state;

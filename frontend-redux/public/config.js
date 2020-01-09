@@ -1,5 +1,5 @@
 (function() {
-	const CONTRACT_NAME = 'fluxx';
+	const CONTRACT_NAME = 'flux-protocol-alpha';
 	const DEFAULT_ENV = 'development';
 
 	function getConfig(env) {

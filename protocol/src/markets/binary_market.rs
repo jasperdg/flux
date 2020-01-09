@@ -90,7 +90,7 @@ impl BinaryMarket {
 	}
 	
 	// Try and remove dups
-	pub fn claim_earnings(&mut self, from: String) {
+	pub fn claim_earnings(&mut self, from: String) -> u64 {
 		assert!(!self.payout_multipliers.is_none() && !self.invalid.is_none());		
 		assert_eq!(self.resoluted, true);
 		let mut claimable_amount = 0;
@@ -102,10 +102,7 @@ impl BinaryMarket {
 			claimable_amount += self.calc_claimable_amount(outcome, open_interest, earnings);
 		}
 
-		if claimable_amount > 0 {
-			let promise_idx = env::promise_batch_create(&from);
-			env::promise_batch_action_transfer(promise_idx, claimable_amount as u128);
-		} 
+		return claimable_amount;
 	}
 
 	pub fn get_earnings(&self, from: String, and_claim: bool) -> u64 {
@@ -121,7 +118,7 @@ impl BinaryMarket {
 			claimable_amount += self.calc_claimable_amount(outcome, open_interest, earnings);
 		}
 
-		return claimable_amount / 100;
+		return claimable_amount;
 	}
 
 	fn cancel_order(&mut self, outcome: u64, order_id: &u64 ) -> bool{
@@ -138,7 +135,12 @@ impl BinaryMarket {
 		if self.invalid.unwrap() {
 			earnings = potential_earnings;
 		} else {
-			earnings = potential_earnings * payout_multiplier / 10000;
+			if payout_multiplier == 0 {
+				earnings = potential_earnings * payout_multiplier;
+			} 
+			else {
+				earnings = potential_earnings;
+			}
 		}
 		return earnings + open_interest;
 	}

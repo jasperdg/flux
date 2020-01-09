@@ -2,24 +2,51 @@ use std::string::String;
 use near_bindgen::{near_bindgen, env};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 mod binary_market;
 type BinaryMarket = binary_market::BinaryMarket;
 type Order = binary_market::orderbook::order::Order;
 
-// TODO: handle account correctly.
 #[near_bindgen]
 #[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 struct Markets {
 	creator: String,
 	active_markets: BTreeMap<u64, BinaryMarket>,
 	nonce: u64,
-
+	fdai_balances: HashMap<String, u128> // Denominated in 1e18
 }
 
+//TODO: It seems like invalid market payouts aren't calculated correctly anymore
 #[near_bindgen]
 impl Markets {
+
+	fn dai_token(&self) -> u64 {
+		let base: u64 = 10;
+		return base.pow(17);
+	}
+
+
+	pub fn add_to_creators_funds(&mut self, amount: u64) {
+		let from = env::predecessor_account_id();
+		assert_eq!(from, self.creator);
+
+		*self.fdai_balances.get_mut(&from).unwrap() += amount;
+	}
+	// This is a demo method, it mints a currency to interact with markets until we have NDAI
+	pub fn claim_fdai(&mut self) -> bool{
+		let from = env::predecessor_account_id();
+		let can_claim = self.fdai_balances.get(&from).is_none();
+		assert!(can_claim);
+		
+		self.fdai_balances.insert(from, 100 * self.dai_token());
+		return true;
+	}
+
+	pub fn get_fdai_balance(&self, from: String) -> &u64 {
+		return self.fdai_balances.get(&from).unwrap();
+	}
+	
 	pub fn create_market(&mut self, outcomes: u64, description: String, end_time: u64) -> bool {
 		// TODO: Do some market validation
 		let from = env::predecessor_account_id();
@@ -46,12 +73,17 @@ impl Markets {
 
 	pub fn place_order(&mut self, market_id: u64, outcome: u64, spend: u64, price_per_share: u64) -> bool {
 		let from = env::predecessor_account_id();
-		let shares = (spend * 100) / price_per_share;
-		// assert!(env::attached_deposit() >= spend as u128); // Commend out for shell
+		let balance = self.fdai_balances.get(&from).unwrap();
+		assert!(balance >= &spend); // Commend out for shell
+		
+		let amount_of_shares = spend / price_per_share;
+		let actualized_spend = amount_of_shares * price_per_share;
 
 		self.active_markets.entry(market_id).and_modify(|market| {
-			market.place_order(from, outcome, shares, spend, price_per_share);
+			market.place_order(from.to_string(), outcome, amount_of_shares, actualized_spend, price_per_share);
 		});
+
+		self.subtract_balance(actualized_spend);
 		return true;
 	}
 
@@ -59,19 +91,35 @@ impl Markets {
 		let from = env::predecessor_account_id();
 		let mut resoluted = false;
 		self.active_markets.entry(market_id).and_modify(|market| {
-			if market.creator == from {
-				market.resolute(payout, invalid);
-				resoluted = true;
-			}
+			assert_eq!(market.creator, from);
+			market.resolute(payout, invalid);
 		});
 		return resoluted;
 	}
 
 	pub fn claim_earnings(&mut self, market_id: u64) {
 		let from = env::predecessor_account_id();
+		let mut earnings = 0;
 		self.active_markets.entry(market_id).and_modify(|market| {
-			market.claim_earnings(from);
+			earnings = market.claim_earnings(from.to_string());
 		});
+
+		assert!(earnings > 0);
+		self.add_balance(earnings)
+	}
+
+	fn subtract_balance(&mut self, amount: u64) {
+		let from = env::predecessor_account_id();
+		let balance = self.fdai_balances.get(&from).unwrap();
+		let new_balance = *balance - amount;
+		self.fdai_balances.insert(from, new_balance);
+	}
+
+	fn add_balance(&mut self, amount: u64) {
+		let from = env::predecessor_account_id();
+		let balance = self.fdai_balances.get(&from).unwrap();
+		let new_balance = *balance + amount;
+		self.fdai_balances.insert(from, new_balance);
 	}
 
 	pub fn get_open_orders(&self, market_id: u64, outcome: u64, from: String) -> Vec<Order> {
@@ -113,7 +161,8 @@ impl Default for Markets {
 		Self {
 			creator: "klopt".to_string(),
 			active_markets: BTreeMap::new(),
-			nonce: 0
+			nonce: 0,
+			fdai_balances: HashMap::new()
 		}
 	}
 }
@@ -157,17 +206,62 @@ mod tests {
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 	}
 
+	#[test]
+	fn test_fdai_balances() {
+		testing_env!(get_context("carol.near".to_string()), Config::default());
+		
+		let mut contract = Markets::default();
+		contract.claim_fdai();
+		let mut balance = contract.get_fdai_balance();
+		let base: u64 = 10;
+		let mut expected_balance  = base.pow(17);
+		let initial_balance = expected_balance;
+
+		assert_eq!(balance, &expected_balance);
+
+		contract.create_market(2, "Hi!".to_string(), 100010101001010);
+		
+		contract.place_order(0, 0, 40000, 40);
+		balance = contract.get_fdai_balance();
+		expected_balance  = expected_balance - 40000;
+		assert_eq!(balance, &expected_balance);
+		
+
+		testing_env!(get_context("bob.near".to_string()), Config::default());
+		contract.claim_fdai();
+
+		contract.place_order(0, 1, 60000, 60);
+		balance = contract.get_fdai_balance();
+		expected_balance = initial_balance - 60000;
+		assert_eq!(balance, &expected_balance);
+
+		testing_env!(get_context("carol.near".to_string()), Config::default());
+		contract.resolute(0, vec![10000, 0], false);
+		contract.claim_earnings(0);
+		
+		balance = contract.get_fdai_balance();
+		expected_balance = initial_balance + 60000;
+		assert_eq!(balance, &expected_balance);
+		
+		testing_env!(get_context("bob.near".to_string()), Config::default());
+		balance = contract.get_fdai_balance();
+		expected_balance = initial_balance - 60000;
+		assert_eq!(balance, &expected_balance);
+	}
+
 
 	#[test]
 	fn test_invalid_market() {
 		testing_env!(get_context("carol.near".to_string()), Config::default());
 		
-		let mut contract = Markets::default(); 
+		let mut contract = Markets::default();
+		contract.claim_fdai();
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 		
 		contract.place_order(0, 0, 40000, 40);
 
 		testing_env!(get_context("bob.near".to_string()), Config::default());
+		contract.claim_fdai();
 		contract.place_order(0, 1, 60000, 60);
 
 		testing_env!(get_context("carol.near".to_string()), Config::default());
@@ -176,40 +270,15 @@ mod tests {
 		assert_eq!(carol_earnings, 40000);
 		let bob_earnings = contract.get_earnings(0, "bob.near".to_string());
 		assert_eq!(bob_earnings, 60000);
-
 		contract.claim_earnings(0);
 	}
 	
-	#[test]
-	fn test_valid_market() {
-		testing_env!(get_context("carol.near".to_string()), Config::default());
-		
-		let mut contract = Markets::default(); 
-		contract.create_market(2, "Hi!".to_string(), 100010101001010);
-		
-		contract.place_order(0, 0, 40000, 40);
-		
-		testing_env!(get_context("bob.near".to_string()), Config::default());
-		contract.place_order(0, 1, 60000, 60);
-		
-		testing_env!(get_context("carol.near".to_string()), Config::default());
-		contract.resolute(0, vec![10000, 0], false);
-		let carol_earnings = contract.get_earnings(0, "carol.near".to_string());
-		assert_eq!(carol_earnings, 100000);
-		let bob_earnings = contract.get_earnings(0, "bob.near".to_string());
-		assert_eq!(bob_earnings, 0);
-		
-		println!("carol: {}, bob: {}", carol_earnings, bob_earnings);
-		
-		contract.claim_earnings(0);
-	}
-	
-
 	#[test]
 	fn test_get_open_orders() {
 		testing_env!(get_context("carol.near".to_string()), Config::default());
 		
 		let mut contract = Markets::default(); 
+		contract.claim_fdai();
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 		
 		contract.place_order(0, 0, 40000, 40);
@@ -226,7 +295,8 @@ mod tests {
 	fn test_get_filled_orders() {
 		testing_env!(get_context("carol.near".to_string()), Config::default());
 		
-		let mut contract = Markets::default(); 
+		let mut contract = Markets::default();
+		contract.claim_fdai();
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 		
 		contract.place_order(0, 0, 40000, 40);
@@ -242,5 +312,34 @@ mod tests {
 		assert_eq!(open_orders.len(), 4);
 		assert_eq!(filled_orders.len(), 1);
 	}
+
+	#[test]
+	fn test_decimal_division_results() {
+		testing_env!(get_context("carol.near".to_string()), Config::default());
+		
+		let mut contract = Markets::default();
+		contract.claim_fdai();
+		contract.create_market(2, "Hi!".to_string(), 100010101001010);
+		
+		contract.place_order(0, 0, 1782361, 77);									
+
+		testing_env!(get_context("bob.near".to_string()), Config::default());
+		contract.claim_fdai();
+
+		contract.place_order(0, 1, 123123123, 23);
+
+		testing_env!(get_context("carol.near".to_string()), Config::default());
+		contract.resolute(0, vec![0, 10000], false);
+		
+
+		
+		testing_env!(get_context("bob.near".to_string()), Config::default());
+		contract.claim_earnings(0);
+		let bob_balance = contract.get_fdai_balance();
+
+		testing_env!(get_context("carol.near".to_string()), Config::default());
+		let carol_balance = contract.get_fdai_balance();
+	}
+		
 
 }

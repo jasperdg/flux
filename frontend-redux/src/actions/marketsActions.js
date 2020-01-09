@@ -22,7 +22,6 @@ export const getMarkets = contract => {
 				json[key].marketOrders = {};
 				return json[key]
 			});
-			console.log(formattedMarkets);
 			dispatch(gotMarkets(formattedMarkets));
 		})
 		.catch (err => console.error(err));

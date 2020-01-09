@@ -7,10 +7,11 @@ const initialState = {
 
 export default function marketReducer(state = initialState, action) {
 	switch(action.type) {
-		case START_ORDER_PLACE: 
+		case START_ORDER_PLACE: 			
 			return {
 				...state,
-				loading: true
+				loading: true,
+				status: null,
 			};
 		case PLACED_ORDER: 
 			return {

@@ -6,6 +6,7 @@ import Header from './Header';
 import Markets from './Markets';
 import LoadingScreen from './LoadingScreen';
 import OwnerPortal from './OwnerPortal';
+import Loader from './Loader';
 
 function App({contract, dispatch, loading, owner, accountId}) {
   useEffect(() => {
@@ -26,6 +27,7 @@ function App({contract, dispatch, loading, owner, accountId}) {
         <LoadingScreen />
         :
         <>
+          <Loader/>
           {(owner && accountId) && owner === accountId && <OwnerPortal/> }
           <Header />
           <Markets />

@@ -14,10 +14,11 @@ export const init = (
 	}
 });
 
-const gotOwner = owner => ({
+const gotOwner = (owner, daiBalance) => ({
 	type: GOT_OWNER,
 	payload: {
-		owner
+		owner,
+		daiBalance
 	}
 })
 
@@ -25,11 +26,10 @@ export const initialize = () => {
 	return async dispatch => {
 		const near = await window.nearlib.connect(Object.assign({ deps: { keyStore: new window.nearlib.keyStores.BrowserLocalStorageKeyStore() } }, window.nearConfig));
 		const walletAccount = new window.nearlib.WalletAccount(near);
-		console.log(walletAccount)
 		const accountId = walletAccount.getAccountId();
 		const contract = await near.loadContract(window.nearConfig.contractName, {
-			viewMethods: ["get_all_markets", "get_market", "get_market_order", "get_owner", "get_earnings", "get_open_orders", "get_filled_orders"],
-			changeMethods: ["create_market", "delete_market", "place_order", "claim_earnings", "resolute_market"],
+			viewMethods: ["get_all_markets", "get_fdai_balance", "get_market", "get_market_order", "get_owner", "get_earnings", "get_open_orders", "get_filled_orders"],
+			changeMethods: ["create_market", "claim_fdai" ,"delete_market", "place_order", "claim_earnings", "resolute_market"],
 			sender: accountId,
 		});
 
@@ -39,9 +39,18 @@ export const initialize = () => {
 			contract, 
 		))
 
+		let daiBalance;
+		try {
+			daiBalance = await contract.get_fdai_balance({from: accountId});
+		} 
+		catch (err) {
+			await contract.claim_fdai();
+			daiBalance = await contract.get_fdai_balance({from: accountId});
+		}
+
 		const contractOwner = await contract.get_owner();
 
-		dispatch(gotOwner(contractOwner))
+		dispatch(gotOwner(contractOwner, daiBalance))
 
 		
 		return true;

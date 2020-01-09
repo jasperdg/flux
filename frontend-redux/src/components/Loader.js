@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import Spinner from './Spinner';
 import Modal from './Modal';
+import { connect } from 'react-redux';
 
 const StyledSpinner = styled(Spinner) `
 	left: calc(50% - 32px);
@@ -25,13 +26,15 @@ const LoadingText = styled(Text)`
 	bottom: 10%;
 `;
 
-function Loader(props) {
 
+//TODO: Handle status => if true success else failure 
+function Loader({txLoading, status}) {
+	console.log(txLoading);
 	return (
-	  props.isActive && <Modal width={"35%"} height={"100px"} blackground={true}>
-		  {props.txRes !== null 
+	  txLoading && <Modal width={"35%"} height={"100px"} blackground={true}>
+		  {status !== null 
 			  ? 
-			  <ResText >{props.txRes === true ? "success" : "failed" }</ResText>
+			  <ResText >{status === true ? "success" : "failed" }</ResText>
 			  : 
 			  (
 				  <>
@@ -47,5 +50,9 @@ function Loader(props) {
 
 }
 
+const mapStateToProps = state => ({
+	txLoading: state.market.loading,
+	status: state.market.status,
+});
 
-export default Loader;
+export default connect(mapStateToProps)(Loader);

@@ -7,8 +7,6 @@ use near_bindgen::{near_bindgen};
 pub mod order;
 pub type Order = order::Order;
 
-
-//TODO: spend is calcualted so often that it should be stored on the order structs
 #[near_bindgen]
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
 pub struct Orderbook {
@@ -19,7 +17,7 @@ pub struct Orderbook {
 	pub nonce: u64,
 	pub outcome_id: u64
 }
-
+// TODO: Market orders are broken - don't update correctly
 impl Orderbook {
 	pub fn new(outcome: u64) -> Self {
 		Self {

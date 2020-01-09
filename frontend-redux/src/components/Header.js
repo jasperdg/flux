@@ -3,7 +3,7 @@ import fluxLogo from '../assets/flux-logo.png';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { initializeAccount, signIn, signOut } from './../actions/accountActions';
-import { toDollars } from '../utils/unitConvertion';
+import { daiToDollars } from '../utils/unitConvertion';
 
 const Logo = styled.img`
 	width: 15%;
@@ -41,10 +41,10 @@ const AccountInfo = styled.span`
 	text-align: center;
 `
 
-function Header({near, walletAccount, account, accountId, accountState, isSignedIn, dispatch}) {
+function Header({near, daiBalance, walletAccount, account, accountId, accountState, isSignedIn, dispatch}) {
 	useEffect(() => {
 		if (near && !isSignedIn) dispatch(initializeAccount(near, walletAccount));
-  });
+	});
   
 	return (
 		<HeaderContainer>
@@ -57,7 +57,7 @@ function Header({near, walletAccount, account, accountId, accountState, isSigned
 					<>
 						<AccountInfoContainer>
 							<AccountInfo> {accountId}</AccountInfo>
-							<AccountInfo> {accountState ? `${toDollars(accountState.amount)}` : null}</AccountInfo>
+							<AccountInfo> {daiBalance ? `$${daiToDollars(daiBalance)}` : null}</AccountInfo>
 						</AccountInfoContainer>
 						<LoginButton onClick={() => signOut(walletAccount)}>Logout</LoginButton>
 					</>
@@ -70,6 +70,7 @@ function Header({near, walletAccount, account, accountId, accountState, isSigned
 
 const mapStateToProps = (state) => ({
 	near: state.near.near,
+	daiBalance: state.near.daiBalance,
 	walletAccount: state.near.walletAccount,
 	account: state.account.account,
 	accountId: state.account.accountId,
