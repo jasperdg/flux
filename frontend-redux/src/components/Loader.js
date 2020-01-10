@@ -29,7 +29,6 @@ const LoadingText = styled(Text)`
 
 //TODO: Handle status => if true success else failure 
 function Loader({txLoading, status}) {
-	console.log(txLoading);
 	return (
 	  txLoading && <Modal width={"35%"} height={"100px"} blackground={true}>
 		  {status !== null 

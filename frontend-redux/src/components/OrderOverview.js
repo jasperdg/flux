@@ -4,19 +4,18 @@ import OrderViewSwitch from './OrderViewSwitch';
 import Orderbook from './Orderbook';
 
 //TODO: Text in constants
-function OrderOverview({}) {
+function OrderOverview({marketId}) {
 	const [orderView, setOrderView] = useState("FILLED");
 
 	const toggleOrderView = () => {
 		const newState = orderView === "FILLED" ? "OPEN" : "FILLED";
-		console.log("doign this");
 		setOrderView(newState)
 	}
 
 	return (
 		<>
 			<OrderViewSwitch toggle={toggleOrderView} activeView={orderView}/>
-			<Orderbook orderType={orderView}/>
+			<Orderbook marketId={marketId} orderType={orderView}/>
 		</>
 	);
 }

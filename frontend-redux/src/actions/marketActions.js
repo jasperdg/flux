@@ -17,15 +17,9 @@ export const startOrderPlace = () => ({
 
 export const placeOrder = (account, marketId, outcome, order) => {
 	return dispatch => {
-		console.log("placing order...");
 		const spend = parseInt(dollarsToDai(order.spend));
+		console.log(spend);
 		dispatch(startOrderPlace());
-		console.log(	{
-			market_id: marketId,
-			outcome: outcome,
-			spend,
-			price_per_share: parseInt(order.odds)
-		});
 		try {
 			account.functionCall(
 				window.nearConfig.contractName, 

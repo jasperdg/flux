@@ -77,8 +77,12 @@ const Markets = ({markets, loading}) => {
 	const marketsContainer = createRef();
 
 	useEffect(() => {
-		setContainerWidth(marketsContainer.current.clientWidth);
-		setContainerHeight(marketsContainer.current.clientHeight);
+		let unmounted = false;
+		if (!unmounted) {
+			setContainerWidth(marketsContainer.current.clientWidth);
+			setContainerHeight(marketsContainer.current.clientHeight);
+		}
+		return () => { unmounted = true };
 	}, []);
 
 	return (

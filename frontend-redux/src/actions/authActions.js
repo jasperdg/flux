@@ -56,6 +56,9 @@ const checkAccessToken = (accessToken, dispatch) => {
 		const { success } = json;
 		dispatch(authStatusSuccess(success));
 	})
-	.catch(err => dispatch(authStatusFailure(err)))
+	.catch(err => {
+		console.error(err);
+		dispatch(authStatusFailure(err))
+	})
 
 }

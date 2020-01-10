@@ -58,7 +58,8 @@ const AllowanceIndicator = styled.div`
 	margin-left: 5px;
 
 `
-
+// TODO: This could be split up in many components
+// TODO: Update balance after claim / order
 function Market({market, accountData, dispatch, contract}) {
 	let lastElement;
 
@@ -71,6 +72,7 @@ function Market({market, accountData, dispatch, contract}) {
 
 	// Update market orders on order placement
 	useEffect(() => {
+		let unmounted = false;
 		if (!market.resoluted) {
 			const marketNoOrder = market.orderbooks[0] ? market.orderbooks[0].market_order : null;
 			const marketYesOrder = market.orderbooks[1] ? market.orderbooks[1].market_order : null;
@@ -78,9 +80,12 @@ function Market({market, accountData, dispatch, contract}) {
 			setYesMarketOrder(marketYesOrder);
 		} else {
 			contract.get_earnings({market_id: market.id, from: accountData.accountId}).then((claimable) => {
-				setEarnings(daiToDollars(claimable));
+				if (!unmounted) {
+					setEarnings(daiToDollars(claimable));
+				}
 			});
 		}
+		return () => { unmounted = true }
 	}, [])
 
 	const toggleOrderType = () => {
@@ -155,7 +160,7 @@ function Market({market, accountData, dispatch, contract}) {
 						renderer={CountdownTimer}
 					/>
 
-					<OrderOverview />
+					<OrderOverview marketId = {market.id}/>
 
 					<ButtonSection>
 						<MarketButton 
