@@ -169,8 +169,8 @@ impl Orderbook {
 	}
 
 	pub fn get_and_delete_earnings(&mut self, from: String, invalid: bool) -> (u64, u64) {
-		let (value_in_open_orders, earnings, open_orders_to_delete, filled_orders_to_delete) = self.get_earnings(from, true, invalid);
 
+		let (value_in_open_orders, earnings, open_orders_to_delete, filled_orders_to_delete) = self.get_earnings(from, true, invalid);
 		if open_orders_to_delete.len() > 0 {
 			self.remove_orders(open_orders_to_delete);
 		}
@@ -178,6 +178,8 @@ impl Orderbook {
 		if filled_orders_to_delete.len() > 0 {
 			self.remove_filled_orders(filled_orders_to_delete);
 		}
+
+		
 
 		return (value_in_open_orders, earnings);
 	}
@@ -190,12 +192,15 @@ impl Orderbook {
 
 		for (_key, order) in &self.open_orders {
 			if order.owner == from {
-				earnings += order.amount_filled * 100;
-				value_in_open_orders += (order.amount - order.amount_filled) * order.price;
+				if !invalid {
+					earnings += order.amount_filled * 100;
+				} else {
+					earnings += order.amount * order.price;
+					value_in_open_orders += (order.amount - order.amount_filled) * order.price;
+				}
 				if and_delete { open_orders_to_delete.push(order.id) }
 			}
 		}
-
 		for(_key, order) in &self.filled_orders {
 			if order.owner == from {
 				if invalid {

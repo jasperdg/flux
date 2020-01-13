@@ -141,8 +141,9 @@ impl BinaryMarket {
 			else {
 				earnings = potential_earnings;
 			}
+			earnings = earnings + open_interest;
 		}
-		return earnings + open_interest;
+		return earnings;
 	}
 
 	fn to_user_outcome_id(&self, user: String, outcome: u64) -> String {

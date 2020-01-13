@@ -14,7 +14,7 @@ struct Markets {
 	creator: String,
 	active_markets: BTreeMap<u64, BinaryMarket>,
 	nonce: u64,
-	fdai_balances: HashMap<String, u128> // Denominated in 1e18
+	fdai_balances: HashMap<String, u64> // Denominated in 1e18
 }
 
 //TODO: It seems like invalid market payouts aren't calculated correctly anymore
@@ -172,12 +172,24 @@ impl Default for Markets {
 mod tests {
     use super::*;
     use near_bindgen::MockedBlockchain;
-    use near_bindgen::{VMContext, Config, testing_env};
+    use near_bindgen::{VMContext, VMConfig, testing_env};
+
+	fn alice() -> String {
+		return "alice.near".to_string();
+	} 
+
+	fn carol() -> String {
+		return "carol.near".to_string();
+	} 
+
+	fn bob() -> String {
+		return "bob.near".to_string();
+	} 
 
 	fn get_context(predecessor_account_id: String) -> VMContext {
 		VMContext {
-			current_account_id: "alice.near".to_string(),
-            signer_account_id: "bob.near".to_string(),
+			current_account_id: alice(),
+            signer_account_id: bob(),
             signer_account_pk: vec![0, 1, 2],
             predecessor_account_id,
             input: vec![],
@@ -186,6 +198,7 @@ mod tests {
 			is_view: false,
             storage_usage: 0,
 			block_timestamp: 123789,
+			account_locked_balance: 0,
             attached_deposit: 500000000,
             prepaid_gas: 10u64.pow(9),
             random_seed: vec![0, 1, 2],
@@ -195,26 +208,26 @@ mod tests {
 
     #[test]
 	fn test_contract_creation() {
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		let mut contract = Markets::default(); 
 	}
 
     #[test]
 	fn test_market_creation() {
-		testing_env!(get_context("carol.near".to_string()),  Config::default());
+		testing_env!(get_context(carol()));
 		let mut contract = Markets::default(); 
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 	}
 
 	#[test]
 	fn test_fdai_balances() {
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		
 		let mut contract = Markets::default();
 		contract.claim_fdai();
-		let mut balance = contract.get_fdai_balance();
+		let mut balance = contract.get_fdai_balance(carol());
 		let base: u64 = 10;
-		let mut expected_balance  = base.pow(17);
+		let mut expected_balance = 100 * base.pow(17);
 		let initial_balance = expected_balance;
 
 		assert_eq!(balance, &expected_balance);
@@ -222,29 +235,29 @@ mod tests {
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 		
 		contract.place_order(0, 0, 40000, 40);
-		balance = contract.get_fdai_balance();
+		balance = contract.get_fdai_balance(carol());
 		expected_balance  = expected_balance - 40000;
 		assert_eq!(balance, &expected_balance);
 		
 
-		testing_env!(get_context("bob.near".to_string()), Config::default());
+		testing_env!(get_context(bob()));
 		contract.claim_fdai();
 
 		contract.place_order(0, 1, 60000, 60);
-		balance = contract.get_fdai_balance();
+		balance = contract.get_fdai_balance(bob());
 		expected_balance = initial_balance - 60000;
 		assert_eq!(balance, &expected_balance);
 
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		contract.resolute(0, vec![10000, 0], false);
 		contract.claim_earnings(0);
 		
-		balance = contract.get_fdai_balance();
+		balance = contract.get_fdai_balance(carol());
 		expected_balance = initial_balance + 60000;
 		assert_eq!(balance, &expected_balance);
 		
-		testing_env!(get_context("bob.near".to_string()), Config::default());
-		balance = contract.get_fdai_balance();
+		testing_env!(get_context(bob()));
+		balance = contract.get_fdai_balance(bob());
 		expected_balance = initial_balance - 60000;
 		assert_eq!(balance, &expected_balance);
 	}
@@ -252,30 +265,35 @@ mod tests {
 
 	#[test]
 	fn test_invalid_market() {
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		
 		let mut contract = Markets::default();
 		contract.claim_fdai();
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 		
-		contract.place_order(0, 0, 40000, 40);
+		contract.place_order(0, 0, 7321893, 70);
 
-		testing_env!(get_context("bob.near".to_string()), Config::default());
+		testing_env!(get_context(bob()));
 		contract.claim_fdai();
-		contract.place_order(0, 1, 60000, 60);
+		contract.place_order(0, 1, 1232173, 30);
 
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		contract.resolute(0, vec![5000, 5000], true);
-		let carol_earnings = contract.get_earnings(0, "carol.near".to_string());
-		assert_eq!(carol_earnings, 40000);
-		let bob_earnings = contract.get_earnings(0, "bob.near".to_string());
-		assert_eq!(bob_earnings, 60000);
+		let carol_earnings = contract.get_earnings(0, carol());
+		let bob_earnings = contract.get_earnings(0, bob());
+
+		println!("carol earnings: {} bob earnigns: {}", carol_earnings, bob_earnings);
+		// assert_eq!(bob_earnings, 50000);
+		let carol_old_balance = contract.get_fdai_balance(carol());
 		contract.claim_earnings(0);
+		println!(" ");
+		let carol_new_balance = contract.get_fdai_balance(carol());
+		println!("Carol's new balance {}" , carol_new_balance);
 	}
 	
 	#[test]
 	fn test_get_open_orders() {
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		
 		let mut contract = Markets::default(); 
 		contract.claim_fdai();
@@ -287,13 +305,13 @@ mod tests {
 		contract.place_order(0, 0, 40000, 40);
 		contract.place_order(0, 0, 40000, 40);
 
-		let open_orders = contract.get_open_orders(0, 0, "carol.near".to_string());
+		let open_orders = contract.get_open_orders(0, 0, carol());
 		assert_eq!(open_orders.len(), 5);
 	}
 
 	#[test]
 	fn test_get_filled_orders() {
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		
 		let mut contract = Markets::default();
 		contract.claim_fdai();
@@ -307,15 +325,15 @@ mod tests {
 		contract.place_order(0, 0, 40000, 40);
 		contract.place_order(0, 0, 40000, 40);
 
-		let open_orders = contract.get_open_orders(0, 0, "carol.near".to_string());
-		let filled_orders = contract.get_filled_orders(0, 0, "carol.near".to_string());
+		let open_orders = contract.get_open_orders(0, 0, carol());
+		let filled_orders = contract.get_filled_orders(0, 0, carol());
 		assert_eq!(open_orders.len(), 4);
 		assert_eq!(filled_orders.len(), 1);
 	}
 
 	#[test]
 	fn test_decimal_division_results() {
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		
 		let mut contract = Markets::default();
 		contract.claim_fdai();
@@ -323,23 +341,22 @@ mod tests {
 		
 		contract.place_order(0, 0, 1782361, 77);									
 
-		testing_env!(get_context("bob.near".to_string()), Config::default());
+		testing_env!(get_context(bob()));
 		contract.claim_fdai();
 
 		contract.place_order(0, 1, 123123123, 23);
 
-		testing_env!(get_context("carol.near".to_string()), Config::default());
+		testing_env!(get_context(carol()));
 		contract.resolute(0, vec![0, 10000], false);
 		
 
 		
-		testing_env!(get_context("bob.near".to_string()), Config::default());
+		testing_env!(get_context(bob()));
 		contract.claim_earnings(0);
-		let bob_balance = contract.get_fdai_balance();
+		let bob_balance = contract.get_fdai_balance(bob());
 
-		testing_env!(get_context("carol.near".to_string()), Config::default());
-		let carol_balance = contract.get_fdai_balance();
-	}
-		
+		testing_env!(get_context(carol()));
+		let carol_balance = contract.get_fdai_balance(carol());
+	}	
 
 }
