@@ -10,7 +10,6 @@ type Order = binary_market::orderbook::order::Order;
 
 #[near_bindgen]
 #[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
-// TODO: Add a way to monitor dai amount in circulation - this way we can find out if there isn't dai beging duplicated/burned. 
 struct Markets {
 	creator: String,
 	active_markets: BTreeMap<u64, BinaryMarket>,
