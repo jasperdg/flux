@@ -120,6 +120,20 @@ impl Orderbook {
 			self.add_order(&mut better_order);
 		}
 
+		let market_order_exists = !self.market_order.is_none();
+		if market_order_exists {
+			let market_order = self.market_order.as_ref().unwrap();
+			if market_order.id == order_id {
+				let new_market_order = self.get_new_market_order(Some(&order)).unwrap_or(market_order.clone());
+				if new_market_order.id == market_order.id {
+					self.market_order = None;
+				} else {
+					self.market_order = self.get_new_market_order(Some(&order));
+				}
+				
+			}
+		}
+
 		return &true;
 	}
 
@@ -152,8 +166,6 @@ impl Orderbook {
 		return self.fill_matching_orders(left_to_fill, price);
 	}
 
-
-
 	fn fill_order(&mut self, order_id: u64, fill_amount: u64) {
 		let mut filled = false;
 		self.open_orders.entry(order_id).and_modify( |order| {
@@ -178,8 +190,6 @@ impl Orderbook {
 		if filled_orders_to_delete.len() > 0 {
 			self.remove_filled_orders(filled_orders_to_delete);
 		}
-
-		
 
 		return (value_in_open_orders, earnings);
 	}

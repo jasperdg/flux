@@ -207,18 +207,40 @@ mod tests {
 		}
 	}
 
-    #[test]
-	fn test_contract_creation() {
-		testing_env!(get_context(carol()));
-		let mut contract = Markets::default(); 
-	}
+    // #[test]
+	// fn test_contract_creation() {
+	// 	testing_env!(get_context(carol()));
+	// 	let mut contract = Markets::default(); 
+	// }
 
-    #[test]
-	fn test_market_creation() {
+    // #[test]
+	// fn test_market_creation() {
+	// 	testing_env!(get_context(carol()));
+	// 	let mut contract = Markets::default(); 
+	// 	contract.create_market(2, "Hi!".to_string(), 100010101001010);
+	// }
+
+
+	#[test]
+	fn test_market_orders() {
 		testing_env!(get_context(carol()));
-		let mut contract = Markets::default(); 
+		
+		let mut contract = Markets::default();
+		contract.claim_fdai();
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
-	}
+		
+		// Placing "no" order
+		contract.place_order(0, 0, 10000, 50);									
+		let market_no_order = contract.get_market_order(0, 0);
+		assert_eq!(market_no_order.is_none(), false);
+		
+		contract.place_order(0, 1, 10000, 50);
+
+		let market_no_order = contract.get_market_order(0, 0);
+		let market_yes_order = contract.get_market_order(0, 1);
+		assert_eq!(market_no_order.is_none(), true);
+		assert_eq!(market_yes_order.is_none(), true);
+	}	
 
 	#[test]
 	fn test_fdai_balances() {
@@ -262,7 +284,6 @@ mod tests {
 		expected_balance = initial_balance - 60000;
 		assert_eq!(balance, &expected_balance);
 	}
-
 
 	#[test]
 	fn test_invalid_market() {
@@ -349,8 +370,6 @@ mod tests {
 
 		testing_env!(get_context(carol()));
 		contract.resolute(0, vec![0, 10000], false);
-		
-
 		
 		testing_env!(get_context(bob()));
 		contract.claim_earnings(0);
