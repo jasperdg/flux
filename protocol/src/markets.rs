@@ -10,15 +10,18 @@ type Order = binary_market::orderbook::order::Order;
 
 #[near_bindgen]
 #[derive(Serialize, Deserialize, BorshDeserialize, BorshSerialize, Debug)]
+// TODO: Add a way to monitor dai amount in circulation - this way we can find out if there isn't dai beging duplicated/burned. 
 struct Markets {
 	creator: String,
 	active_markets: BTreeMap<u64, BinaryMarket>,
 	nonce: u64,
-	fdai_balances: HashMap<String, u64> // Denominated in 1e18
+	fdai_balances: HashMap<String, u64>, // Denominated in 1e18
+	fdai_circulation: u128,
+	fdai_in_protocol: u128,
+	fdai_outside_escrow: u128,
+	user_count: u64
 }
 
-
-// TODO: market orders on fill don't both get reset.
 #[near_bindgen]
 impl Markets {
 
@@ -27,20 +30,31 @@ impl Markets {
 		return base.pow(17);
 	}
 
-
+	// This is a demo method, it mints a currency to interact with markets until we have NDAI
 	pub fn add_to_creators_funds(&mut self, amount: u64) {
 		let from = env::predecessor_account_id();
 		assert_eq!(from, self.creator);
 
 		*self.fdai_balances.get_mut(&from).unwrap() += amount;
+
+		// Monitoring total supply - just for testnet
+		self.fdai_circulation = self.fdai_circulation + amount as u128;
+		self.fdai_outside_escrow = self.fdai_outside_escrow + amount as u128;
 	}
+
 	// This is a demo method, it mints a currency to interact with markets until we have NDAI
 	pub fn claim_fdai(&mut self) -> bool{
 		let from = env::predecessor_account_id();
 		let can_claim = self.fdai_balances.get(&from).is_none();
 		assert!(can_claim);
 		
-		self.fdai_balances.insert(from, 100 * self.dai_token());
+		let claim_amount = 100 * self.dai_token();
+		self.fdai_balances.insert(from, claim_amount);
+
+		// Monitoring total supply - just for testnet
+		self.fdai_circulation = self.fdai_circulation + claim_amount as u128;
+		self.fdai_outside_escrow = self.fdai_outside_escrow + claim_amount as u128;
+		self.user_count = self.user_count + 1;
 		return true;
 	}
 
@@ -114,6 +128,10 @@ impl Markets {
 		let balance = self.fdai_balances.get(&from).unwrap();
 		let new_balance = *balance - amount;
 		self.fdai_balances.insert(from, new_balance);
+
+		// For monitoring supply - just for testnet
+		self.fdai_outside_escrow = self.fdai_outside_escrow - amount as u128;
+		self.fdai_in_protocol= self.fdai_outside_escrow + amount as u128;
 	}
 
 	fn add_balance(&mut self, amount: u64) {
@@ -121,6 +139,10 @@ impl Markets {
 		let balance = self.fdai_balances.get(&from).unwrap();
 		let new_balance = *balance + amount;
 		self.fdai_balances.insert(from, new_balance);
+
+		// For monitoring supply - just for testnet
+		self.fdai_outside_escrow = self.fdai_outside_escrow + amount as u128;
+		self.fdai_in_protocol= self.fdai_outside_escrow - amount as u128;
 	}
 
 	pub fn get_open_orders(&self, market_id: u64, outcome: u64, from: String) -> Vec<Order> {
@@ -155,6 +177,10 @@ impl Markets {
 		return market.unwrap().orderbooks[&outcome].get_market_order();
 	}
 
+	pub fn get_fdai_metrics(&self) -> (u128, u128, u128, u64) {
+		return (self.fdai_circulation, self.fdai_in_protocol, self.fdai_outside_escrow, self.user_count);
+	}
+
 }
 
 impl Default for Markets {
@@ -163,7 +189,11 @@ impl Default for Markets {
 			creator: "klopt".to_string(),
 			active_markets: BTreeMap::new(),
 			nonce: 0,
-			fdai_balances: HashMap::new()
+			fdai_balances: HashMap::new(),	
+			fdai_circulation: 0,
+			fdai_in_protocol: 0,
+			fdai_outside_escrow: 0,
+			user_count: 0
 		}
 	}
 }
@@ -207,18 +237,18 @@ mod tests {
 		}
 	}
 
-    // #[test]
-	// fn test_contract_creation() {
-	// 	testing_env!(get_context(carol()));
-	// 	let mut contract = Markets::default(); 
-	// }
+    #[test]
+	fn test_contract_creation() {
+		testing_env!(get_context(carol()));
+		let mut contract = Markets::default(); 
+	}
 
-    // #[test]
-	// fn test_market_creation() {
-	// 	testing_env!(get_context(carol()));
-	// 	let mut contract = Markets::default(); 
-	// 	contract.create_market(2, "Hi!".to_string(), 100010101001010);
-	// }
+    #[test]
+	fn test_market_creation() {
+		testing_env!(get_context(carol()));
+		let mut contract = Markets::default(); 
+		contract.create_market(2, "Hi!".to_string(), 100010101001010);
+	}
 
 
 	#[test]
