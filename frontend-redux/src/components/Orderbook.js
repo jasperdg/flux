@@ -22,7 +22,7 @@ const CollumnTitle = styled.div`
 `;
 
 const Body = styled.div`
-	max-height: 200px;
+	max-height: 150px;
 	overflow: scroll;
 `;
 const Row = styled.div`
@@ -40,44 +40,28 @@ const Entry = styled.div`
 `;
 
 
-function Orderbook({orderType, contract, accountId, marketId}) {
-	const [orders, setOrders ] = useState([]);
-	const [lastOrderType, setLastOrderType] = useState(null)
-	
-	useEffect( () => {
-		if(lastOrderType !== orderType) {
-			let unmounted = false;	
-			Promise.all([
-				contract[`get_${orderType.toLowerCase()}_orders`]({market_id: marketId, outcome: 0, from: accountId}),
-				contract[`get_${orderType.toLowerCase()}_orders`]({market_id: marketId, outcome: 1, from: accountId}),
-			]).then(res => {
-				if (!unmounted) {
-					setOrders(res);
-					setLastOrderType(orderType)
-				}})
-				.catch(err => console.error(err));
-		
-				return () => { unmounted = true };
-		}
-	})
-
-	const formattedOrderElems = [];
-	
+function Orderbook({userOrders, orderType}) {	
 	let key = 0;
 	// TODO combine all orders that are bought at one specific price.
-	// TODO update current orderbook on orderplacement
+	if (userOrders === null) return (<></>);
+	const orderIndex = orderType === "FILLED" ? 1 : 0;
+	const orders = userOrders[orderIndex];
+
+	let formattedOrderElems = [];
+
 	orders.forEach((outcome, i) => {
-		outcome.forEach((order) => {
+		outcome.forEach(order => {
 			formattedOrderElems.push(
-			<Row key={key}>
-				<Entry>{i === 0 ? "NO" : "YES"} </Entry>
-				<Entry>{daiToDollars(order.amount * order.price)} </Entry>
-				<Entry>{order.price}</Entry>
-				<Entry>{parseInt(order.amount_filled) / parseInt(order.amount) * 100}%</Entry>
-			</Row>)
+				<Row key={key}>
+					<Entry>{i === 0 ? "NO" : "YES"} </Entry>
+					<Entry>{daiToDollars(order.amount * order.price)} </Entry>
+					<Entry>{order.price}</Entry>
+					<Entry>{parseInt(order.amount_filled) / parseInt(order.amount) * 100}%</Entry>
+				</Row>
+			)
 			key++;
-		})
-	})
+		});
+	});
 
 	return (
 		<Book>

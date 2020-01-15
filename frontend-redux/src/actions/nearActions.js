@@ -1,5 +1,6 @@
 export const INIT = "INIT";
 export const GOT_OWNER = "GOT_OWNER";
+export const UPDATED_BALANCE = "UPDATED_BALANCE";
 
 export const init = (
 	near,
@@ -20,7 +21,14 @@ const gotOwner = (owner, daiBalance) => ({
 		owner,
 		daiBalance
 	}
-})
+});
+
+const updatedBalance = daiBalance => ({
+	type: UPDATED_BALANCE,
+	payload: {
+		daiBalance,
+	}
+});
 
 export const initialize = () => {
 	return async dispatch => {
@@ -49,10 +57,14 @@ export const initialize = () => {
 		}
 
 		const contractOwner = await contract.get_owner();
-
 		dispatch(gotOwner(contractOwner, daiBalance))
-
-		
 		return true;
+	}
+}
+
+export const updateBalance = (contract, accountId) => {
+	return async dispatch => {
+		const daiBalance = await contract.get_fdai_balance({from: accountId});
+		dispatch(updatedBalance(daiBalance))
 	}
 }

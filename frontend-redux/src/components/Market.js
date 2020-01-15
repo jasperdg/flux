@@ -12,6 +12,7 @@ import { fromPayoutDistribution, yoctoToNear, allowanceToColor, daiToDollars } f
 import { capitalize } from '../utils/stringManipulation';
 import { connect } from 'react-redux';
 import { placeOrder, claimEarnings } from '../actions/marketActions';
+import { updateBalance } from '../actions/nearActions.js';
 
 const MarketContainer = styled.div`
   width: 90%;
@@ -59,23 +60,35 @@ const AllowanceIndicator = styled.div`
 
 `
 // TODO: This could be split up in many components
-// TODO: Update balance after claim / order
+// TODO: Handle events through NEAR RPC
 function Market({market, accountData, dispatch, contract}) {
 	let lastElement;
 
+	const [updatedMarket, setUpdatedMarket] = useState(market);
 	const [orderType, setOrderType] = useState("market")
 	const [spend, setSpend] = useState(0);
 	const [odds, setOdds] = useState(50);
 	const [marketNoOrder, setNoMarketOrder]  = useState(null);
 	const [marketYesOrder, setYesMarketOrder]  = useState(null);
 	const [earnings, setEarnings]  = useState(0);
+	const [userOrders, setUserOrders] = useState(null);
 
-	// Update market orders on order placement
+	market = updatedMarket;
+
 	useEffect(() => {
 		let unmounted = false;
 		if (!market.resoluted) {
 			const marketNoOrder = market.orderbooks[0] ? market.orderbooks[0].market_order : null;
 			const marketYesOrder = market.orderbooks[1] ? market.orderbooks[1].market_order : null;
+
+			if (userOrders === null) {
+				market.getUserOrders(contract, accountData.accountId).then(orders => {
+					if (!unmounted) {
+						setUserOrders(orders);
+					}
+				});
+			}
+
 			setNoMarketOrder(marketNoOrder);
 			setYesMarketOrder(marketYesOrder);
 		} else {
@@ -86,10 +99,26 @@ function Market({market, accountData, dispatch, contract}) {
 			});
 		}
 		return () => { unmounted = true }
-	}, [])
+	})
+
+	const getAndUpdateUserOrders = () => {
+		market.getUserOrders(contract, accountData.accountId).then(orders => {
+			setUserOrders(orders);
+		});
+	}
+
+	const updateUserBalance = () => {
+		dispatch(updateBalance(contract, accountData.accountId));
+	}
 
 	const toggleOrderType = () => {
 		setOrderType(orderType == "market" ? "limit" : "market");
+	}
+	
+	const updateMarket = () => {
+		market.updateMarket(contract).then( res => {
+			setUpdatedMarket(res);
+		});
 	}
 
 	const onInputChange = (field, value) => {
@@ -160,7 +189,7 @@ function Market({market, accountData, dispatch, contract}) {
 						renderer={CountdownTimer}
 					/>
 
-					<OrderOverview marketId = {market.id}/>
+					<OrderOverview marketId={market.id} userOrders={userOrders}/>
 
 					<ButtonSection>
 						<MarketButton 
@@ -171,7 +200,7 @@ function Market({market, accountData, dispatch, contract}) {
 							orderType={orderType}
 							odds={odds}
 							label="no"
-							placeOrder={() => dispatch(placeOrder(accountData.account, market.id, 0, order))}
+							placeOrder={() => dispatch(placeOrder(accountData.account, market.id, 0, order, updateMarket, getAndUpdateUserOrders, updateUserBalance))}
 							/>
 
 						<MarketButton 
@@ -182,7 +211,7 @@ function Market({market, accountData, dispatch, contract}) {
 							orderType={orderType}
 							odds={odds}
 							label="yes"
-							placeOrder={() => dispatch(placeOrder(accountData.account, market.id, 1, order))}
+							placeOrder={() => dispatch(placeOrder(accountData.account, market.id, 1, order, updateMarket, getAndUpdateUserOrders, updateUserBalance))}
 						/>
 					</ButtonSection>
 				</>
@@ -190,7 +219,7 @@ function Market({market, accountData, dispatch, contract}) {
 				<div>
 					The outcome is: {fromPayoutDistribution(market.payout_multipliers)}
 					<button onClick={() => {
-						dispatch(claimEarnings(accountData.account, market.id))
+						dispatch(claimEarnings(accountData.account, market.id, updateUserBalance))
 					}}>Claim ${earnings}</button> 
 				</div>
 			}

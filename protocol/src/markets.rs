@@ -17,7 +17,8 @@ struct Markets {
 	fdai_balances: HashMap<String, u64> // Denominated in 1e18
 }
 
-//TODO: It seems like invalid market payouts aren't calculated correctly anymore
+
+// TODO: market orders on fill don't both get reset.
 #[near_bindgen]
 impl Markets {
 

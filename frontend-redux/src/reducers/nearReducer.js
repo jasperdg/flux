@@ -1,7 +1,8 @@
 
 import { 
 	INIT,
-	GOT_OWNER
+	GOT_OWNER,
+	UPDATED_BALANCE
 } from "../actions/nearActions";
 
 const initialState = {
@@ -29,6 +30,11 @@ export default function nearReducer(state = initialState, action) {
 				owner: action.payload.owner,
 				daiBalance: action.payload.daiBalance,
 			}
+		case UPDATED_BALANCE:
+				return {
+					...state,
+					daiBalance: action.payload.daiBalance,
+				}
 		default: 
 			return state;
 	}

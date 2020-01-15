@@ -1,7 +1,9 @@
 import BN from 'bn.js';
 import { dollarsToDai } from '../utils/unitConvertion';
+import { updateBalance } from './nearActions';
 export const PLACED_ORDER = "PLACED_ORDER";
 export const START_ORDER_PLACE = "START_ORDER_PLACE";
+
 
 export const placedOrder = result => ({
 	type: PLACED_ORDER,
@@ -15,7 +17,7 @@ export const startOrderPlace = () => ({
 });
 
 
-export const placeOrder = (account, marketId, outcome, order) => {
+export const placeOrder = (account, marketId, outcome, order, updateMarket, getAndUpdateUserOrders, updateUserBalance) => {
 	return dispatch => {
 		const spend = parseInt(dollarsToDai(order.spend));
 		console.log(spend);
@@ -33,7 +35,10 @@ export const placeOrder = (account, marketId, outcome, order) => {
 				new BN("100000000000000"),
 				new BN("0")
 			).then(res => {
-				dispatch(placedOrder(true))
+				dispatch(placedOrder(true));
+				updateMarket();
+				getAndUpdateUserOrders();
+				updateUserBalance();
 				// TODO: update account balance (initialized in nearAction/reducer)
 			});
 		}
@@ -44,7 +49,7 @@ export const placeOrder = (account, marketId, outcome, order) => {
 	}
 }
 
-export const claimEarnings = (account, marketId) => {
+export const claimEarnings = (account, marketId, updateUserBalance) => {
 	return dispatch => {
 		dispatch(startOrderPlace());
 		account.functionCall(
@@ -57,6 +62,7 @@ export const claimEarnings = (account, marketId) => {
 			new BN("0")
 		).then(() => {
 			dispatch(placedOrder(true))
+			updateUserBalance();
 		}).catch(()=> {
 			dispatch(placedOrder(false))
 		});
