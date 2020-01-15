@@ -22,21 +22,24 @@ export const authStatusFailure = err => ({
 	}
 });
 
-export const getAuthStatus = (accessToken) => {
+export const getAuthStatus = (walletAccount, accessToken) => {
 	return dispatch => {
 		dispatch(getAuthStatusBegin());
-		return fetch(`${API_URL}/check_auth`, {
-			mode: 'cors',
-			credentials: 'include'
-		})
-		.then(res => res.json())
-		.then(json => {
-			const { success } = json;
-			if (success) dispatch(authStatusSuccess(success));
-			else checkAccessToken(accessToken, dispatch);
-			return success;
-		})
-		.catch(err => dispatch(authStatusFailure(err)));
+		if (walletAccount) {
+			console.log("gotWalletacct")
+			return fetch(`${API_URL}/check_auth`, {
+				mode: 'cors',
+				credentials: 'include'
+			})
+			.then(res => res.json())
+			.then(json => {
+				const { success } = json;
+				if (success) dispatch(authStatusSuccess(success));
+				else checkAccessToken(accessToken, dispatch);
+				return success;
+			})
+			.catch(err => dispatch(authStatusFailure(err)));
+		}
 	}
 }
 

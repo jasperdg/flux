@@ -5,12 +5,15 @@ import { getAuthStatus } from '../actions/authActions';
 import isMobileDevice from '../utils/isMobileDevice';
 import DesktopSplash from './DesktopSplash';
 import LoadingScreen from './LoadingScreen';
+import { initialize } from '../actions/nearActions';
 
-function Authenticate({dispatch, success, loading, error,...props}) {
+function Authenticate({dispatch, walletAccount, success, loading, error,...props}) {
 	useEffect(() => {
-		dispatch(getAuthStatus(props.match.params.accessToken));
+		dispatch(initialize());
 	}, []);
-
+	
+	// dispatch(getAuthStatus(walletAccount, props.match.params.accessToken));
+	// console.log(walletAccount);
 	const mobile = isMobileDevice();
 	if (loading) return <LoadingScreen />;
 	if (!mobile) return <DesktopSplash />;
@@ -19,6 +22,7 @@ function Authenticate({dispatch, success, loading, error,...props}) {
 }
 
 const mapStateToProps = state => ({
+	walletAccount: state.near.walletAccount,
 	success: state.auth.success,
 	loading: state.auth.loading,
 	error: state.auth.error,

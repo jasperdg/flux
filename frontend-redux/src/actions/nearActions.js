@@ -46,18 +46,22 @@ export const initialize = () => {
 			walletAccount,
 			contract, 
 		))
+		console.log("did this");
 
-		let daiBalance;
-		try {
-			daiBalance = await contract.get_fdai_balance({from: accountId});
-		} 
-		catch (err) {
-			await contract.claim_fdai();
-			daiBalance = await contract.get_fdai_balance({from: accountId});
+		if (walletAccount.isSignedIn()) {
+			let daiBalance;
+			try {
+				daiBalance = await contract.get_fdai_balance({from: accountId});
+			} 
+			catch (err) {
+				await contract.claim_fdai();
+				daiBalance = await contract.get_fdai_balance({from: accountId});
+			}
+	
+			const contractOwner = await contract.get_owner();
+			dispatch(gotOwner(contractOwner, daiBalance))
 		}
 
-		const contractOwner = await contract.get_owner();
-		dispatch(gotOwner(contractOwner, daiBalance))
 		return true;
 	}
 }

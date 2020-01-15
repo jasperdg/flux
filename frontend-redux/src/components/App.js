@@ -10,15 +10,14 @@ import Loader from './Loader';
 
 function App({contract, dispatch, loading, owner, accountId}) {
   useEffect(() => {
-    dispatch(initialize());
-  }, []);
-
-  useEffect(() => {
     if (contract) {
       dispatch(getMarkets(contract));
     } 
   })
 
+  // const authData = JSON.parse(window.localStorage.getItem(this._authDataKey) || '{}');
+  // console.log(authData);
+  console.log(window.localStorage);
   return (
     <div className="App">
       {
