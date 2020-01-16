@@ -316,6 +316,44 @@ mod tests {
 	}
 
 	#[test]
+	fn test_payout_open_orders_on_loss() {
+		testing_env!(get_context(carol()));
+		
+		let mut contract = Markets::default();
+		contract.claim_fdai();
+		let mut balance = contract.get_fdai_balance(carol());
+		let base: u64 = 10;
+		let mut expected_balance = 100 * base.pow(17);
+		let initial_balance = expected_balance;
+
+		assert_eq!(balance, &expected_balance);
+
+		contract.create_market(2, "Hi!".to_string(), 100010101001010);
+		
+		contract.place_order(0, 0, 10000, 50);
+		
+		testing_env!(get_context(bob()));
+		contract.claim_fdai();
+		
+		contract.place_order(0, 1, 10000, 50);
+		contract.place_order(0, 0, 10000, 50);
+
+		testing_env!(get_context(carol()));
+		contract.resolute(0, vec![10000, 0], false); // carol wins
+		contract.claim_earnings(0);
+		
+		balance = contract.get_fdai_balance(carol());
+		expected_balance = initial_balance + 10000;
+		assert_eq!(balance, &expected_balance);
+		
+		testing_env!(get_context(bob()));
+		contract.claim_earnings(0);
+		balance = contract.get_fdai_balance(bob());
+		expected_balance = initial_balance - 10000;
+		assert_eq!(balance, &expected_balance);
+	}
+
+	#[test]
 	fn test_invalid_market() {
 		testing_env!(get_context(carol()));
 		

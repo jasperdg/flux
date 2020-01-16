@@ -203,7 +203,7 @@ impl Orderbook {
 		for (_key, order) in &self.open_orders {
 			if order.owner == from {
 				if !invalid {
-					earnings += order.amount_filled * 100;
+					earnings += (order.amount - order.amount_filled) * order.price;
 				} else {
 					earnings += order.amount * order.price;
 					value_in_open_orders += (order.amount - order.amount_filled) * order.price;
