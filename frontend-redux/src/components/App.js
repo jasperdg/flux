@@ -1,25 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { initialize } from '../actions/nearActions';
 import { getMarkets } from '../actions/marketsActions';
 import Header from './Header';
 import Markets from './Markets';
 import LoadingScreen from './LoadingScreen';
 import OwnerPortal from './OwnerPortal';
 import Loader from './Loader';
+import styled from 'styled-components';
+
+const AppContainer = styled.div`
+
+
+`
+
 
 function App({contract, dispatch, loading, owner, accountId}) {
   useEffect(() => {
     if (contract) {
       dispatch(getMarkets(contract));
     } 
-  })
+  });
 
-  // const authData = JSON.parse(window.localStorage.getItem(this._authDataKey) || '{}');
-  // console.log(authData);
-  console.log(window.localStorage);
   return (
-    <div className="App">
+    <AppContainer >
       {
         loading 
         ?
@@ -32,7 +35,7 @@ function App({contract, dispatch, loading, owner, accountId}) {
           <Markets />
         </>
       }
-    </div>
+    </AppContainer>
   );
 }
 

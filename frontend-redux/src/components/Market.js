@@ -27,7 +27,7 @@ const MarketContainer = styled.div`
   -moz-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
   box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
   margin-left: 5%;
-  overflow: hidden;
+  overflow: scroll;
 `;
 
 const ButtonSection = styled.div`

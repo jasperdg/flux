@@ -51,7 +51,7 @@ const GlobalStyle = createGlobalStyle`
 		-moz-osx-font-smoothing: grayscale;
 	}
 
-	body, html {
+	html, body {
 		background-color: #DFDFFE;
 		/* overflow: hidden;
 		display: block;

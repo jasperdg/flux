@@ -7,7 +7,7 @@ import thunk from 'redux-thunk';
 import * as serviceWorker from './serviceWorker';
 import GlobalStyles from  "./global-styles";
 
-import Authenticate from './components/Authenticate';
+import Authenticate from './components/Auth/Authenticate';
 import rootReducer from './reducers/rootReducer';
 
 const store = createStore(

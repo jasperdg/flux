@@ -46,7 +46,6 @@ export const initialize = () => {
 			walletAccount,
 			contract, 
 		))
-		console.log("did this");
 
 		if (walletAccount.isSignedIn()) {
 			let daiBalance;
@@ -54,10 +53,10 @@ export const initialize = () => {
 				daiBalance = await contract.get_fdai_balance({from: accountId});
 			} 
 			catch (err) {
-				await contract.claim_fdai();
+				await contract.claim_fdai({}, 10000000000000);
 				daiBalance = await contract.get_fdai_balance({from: accountId});
 			}
-	
+
 			const contractOwner = await contract.get_owner();
 			dispatch(gotOwner(contractOwner, daiBalance))
 		}
