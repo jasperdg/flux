@@ -330,27 +330,28 @@ mod tests {
 
 		contract.create_market(2, "Hi!".to_string(), 100010101001010);
 		
-		contract.place_order(0, 0, 10000, 50);
+		contract.place_order(0, 0, 10000, 10);
+		contract.place_order(0, 0, 20000, 50);
 		
 		testing_env!(get_context(bob()));
 		contract.claim_fdai();
 		
-		contract.place_order(0, 1, 10000, 50);
-		contract.place_order(0, 0, 10000, 50);
-
+		contract.place_order(0, 1, 21000, 50);
+		contract.place_order(0, 1, 10000, 90);
+		
 		testing_env!(get_context(carol()));
 		contract.resolute(0, vec![10000, 0], false); // carol wins
-		contract.claim_earnings(0);
+		// contract.claim_earnings(0);
 		
-		balance = contract.get_fdai_balance(carol());
-		expected_balance = initial_balance + 10000;
-		assert_eq!(balance, &expected_balance);
-		
-		testing_env!(get_context(bob()));
-		contract.claim_earnings(0);
-		balance = contract.get_fdai_balance(bob());
-		expected_balance = initial_balance - 10000;
-		assert_eq!(balance, &expected_balance);
+		let claimable_carol = contract.get_earnings(0, carol());
+		let claimable_bob = contract.get_earnings(0, bob());
+		let expected_carol = 20000 + 40000;
+		let expected_bob = 1000;
+		let carol_delta = expected_carol - claimable_carol;
+		let bob_delta = expected_bob - claimable_bob;
+		assert!(carol_delta <= 100);
+		assert!(bob_delta <= 100);
+
 	}
 
 	#[test]

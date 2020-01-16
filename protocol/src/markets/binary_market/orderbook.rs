@@ -90,15 +90,22 @@ impl Orderbook {
 		let has_parent_order_id = !order.prev.is_none();
 		let has_worse_order_id = !order.worse_order_id.is_none();
 		let has_better_order_id = !order.better_order_id.is_none();
-
+		
 		if has_parent_order_id {
 			let parent_order_id = order.prev.as_ref().unwrap();
+			let root = self.root.as_mut().unwrap();
 			self.open_orders.entry(*parent_order_id).and_modify(|parent_order| {
 				if &order_id == parent_order.worse_order_id.as_ref().unwrap_or(&0) {
 					parent_order.worse_order_id = None;
+					if root.id == parent_order.id {
+						root.worse_order_id = None;
+					}
 				} 
 				else if &order_id == parent_order.better_order_id.as_ref().unwrap_or(&0) {
 					parent_order.better_order_id = None;
+					if root.id == parent_order.id {
+						root.better_order_id = None;
+					}
 				} 
 				else {
 					panic!("Oops: the order's parent doesn't link back to this order!")
@@ -157,7 +164,7 @@ impl Orderbook {
 		else {
 			to_fill = match_shares_to_fill;
 		}
-	
+
 		let matching_order_id = matching_order.id.clone();
 		let matching_order_owner = matching_order.owner.to_string();
 		self.fill_order(matching_order_id, to_fill);
@@ -203,7 +210,8 @@ impl Orderbook {
 		for (_key, order) in &self.open_orders {
 			if order.owner == from {
 				if !invalid {
-					earnings += (order.amount - order.amount_filled) * order.price;
+					earnings += order.amount_filled * 100;
+					value_in_open_orders += (order.amount - order.amount_filled) * order.price;
 				} else {
 					earnings += order.amount * order.price;
 					value_in_open_orders += (order.amount - order.amount_filled) * order.price;
@@ -235,7 +243,10 @@ impl Orderbook {
 			self.filled_orders.remove(&order_id);
 		}
 	}
-
+	
+	
+	
+	//TODO : WTF?
 	pub fn get_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
 		if current_order.price == target_price {
 			return Some(current_order.id);

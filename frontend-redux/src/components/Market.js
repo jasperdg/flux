@@ -56,9 +56,42 @@ const AllowanceIndicator = styled.div`
 	display: inline-block;
 	vertical-align: middle;
 	margin-left: 5px;
-`
-// TODO: This could be split up in many components
-// TODO: Handle events through NEAR RPC
+`;
+
+const ResolutedSection = styled.div`
+	display: block;
+	width: 100%;
+`;
+const ResolutionTitle = styled.h2`
+	text-align: center;
+`;
+const Resolution = styled.span`
+	color: ${BLUE};
+	width: 100%;
+	text-align: center;
+`;
+
+// TODO: should make this components that are importable since this style is also used in auth
+const ClaimButton = styled.button`
+	background-color: ${BLUE};
+	color: white;
+	font-family: "Gilroy";
+	border-radius: 6px;
+	padding: 15px;
+	font-size: 16px;
+	border: none;
+	box-sizing: border-box;
+  -webkit-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+  -moz-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+  box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
+	position: absolute;
+	width: 80%;
+	left: 10%;
+	bottom: 25px;
+`;
+
+// TODO: This could be compartmentalized a lot more.
+// TODO: color buttons differently depending on market outcome
 function Market({market, accountData, dispatch, contract}) {
 	let lastElement;
 
@@ -219,12 +252,15 @@ function Market({market, accountData, dispatch, contract}) {
 					</ButtonSection>
 				</>
 				:
-				<div>
-					The outcome is: {fromPayoutDistribution(market.payout_multipliers)}
-					<button onClick={() => {
+				<ResolutedSection>
+					<ResolutionTitle>
+						Resoluted: <Resolution>{fromPayoutDistribution(market.payout_multipliers).toUpperCase()}</Resolution>
+					</ResolutionTitle>
+
+					<ClaimButton onClick={() => {
 						dispatch(claimEarnings(accountData.account, market.id, updateUserBalance))
-					}}>Claim ${earnings}</button> 
-				</div>
+					}}>Claim ${earnings}</ClaimButton> 
+				</ResolutedSection>
 			}
 		</MarketContainer>
 	)
