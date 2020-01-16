@@ -92,6 +92,7 @@ const ClaimButton = styled.button`
 
 // TODO: This could be compartmentalized a lot more.
 // TODO: color buttons differently depending on market outcome
+// TODO: If place order fails the loader Doesn't stop - should return error
 function Market({market, accountData, dispatch, contract}) {
 	let lastElement;
 
