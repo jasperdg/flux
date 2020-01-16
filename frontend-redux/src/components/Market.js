@@ -38,7 +38,6 @@ const ButtonSection = styled.div`
   justify-content: space-between;
   flex-wrap: wrap;
 `;
-
 const Description = styled.h1`
 	color: #310094;
 	padding: 45px 30px;
@@ -57,7 +56,6 @@ const AllowanceIndicator = styled.div`
 	display: inline-block;
 	vertical-align: middle;
 	margin-left: 5px;
-
 `
 // TODO: This could be split up in many components
 // TODO: Handle events through NEAR RPC
@@ -152,7 +150,6 @@ function Market({market, accountData, dispatch, contract}) {
 		spend,
 		odds
 	}
-
 	const ColoredAllowanceIndicator = styled(AllowanceIndicator)`
 		background-color: ${allowanceToColor(accountData.allowance)};
 	`;
@@ -200,7 +197,10 @@ function Market({market, accountData, dispatch, contract}) {
 							orderType={orderType}
 							odds={odds}
 							label="no"
-							placeOrder={() => dispatch(placeOrder(accountData.account, market.id, 0, order, updateMarket, getAndUpdateUserOrders, updateUserBalance))}
+							placeOrder={(finalPrice) => {
+								order.odds = finalPrice
+								dispatch(placeOrder(accountData.account, market.id, 0, order, updateMarket, getAndUpdateUserOrders, updateUserBalance))
+							}}
 							/>
 
 						<MarketButton 
@@ -211,7 +211,10 @@ function Market({market, accountData, dispatch, contract}) {
 							orderType={orderType}
 							odds={odds}
 							label="yes"
-							placeOrder={() => dispatch(placeOrder(accountData.account, market.id, 1, order, updateMarket, getAndUpdateUserOrders, updateUserBalance))}
+							placeOrder={(finalPrice) => {
+								order.odds = finalPrice
+								dispatch(placeOrder(accountData.account, market.id, 1, order, updateMarket, getAndUpdateUserOrders, updateUserBalance))
+							}}
 						/>
 					</ButtonSection>
 				</>
