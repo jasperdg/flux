@@ -70,7 +70,7 @@ const SuccessMessage = styled.p`
 	text-align: center;
 `
 
-function EnterAccessToken({dispatch, accountId}) {
+function EnterAccessToken({dispatch, accountId, account}) {
 	const [dataType, setDataType] = useState("token");
 	const [inputValue, setInputValue] = useState("");
 	const [error, setError] = useState("");
@@ -79,7 +79,7 @@ function EnterAccessToken({dispatch, accountId}) {
 
 	const formSubmit = () => {
 		if (dataType === "token") {
-			dispatch(checkAccessToken(inputValue, accountId))
+			dispatch(checkAccessToken(inputValue, accountId, account))
 		} else {
 			if (isValidEmail(inputValue)) {
 				recaptcha.execute()

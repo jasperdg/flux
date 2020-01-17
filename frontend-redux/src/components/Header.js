@@ -1,8 +1,8 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import fluxLogo from '../assets/flux-logo.png';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import { initializeAccount, signIn, signOut } from './../actions/accountActions';
+import { signIn, signOut } from './../actions/accountActions';
 import { daiToDollars } from '../utils/unitConvertion';
 
 const Logo = styled.img`
@@ -42,10 +42,6 @@ const AccountInfo = styled.span`
 `
 
 function Header({near, daiBalance, walletAccount, account, accountId, accountState, isSignedIn, dispatch}) {
-	useEffect(() => {
-		if (near && !isSignedIn) dispatch(initializeAccount(near, walletAccount));
-	});
-  
 	return (
 		<HeaderContainer>
 		  <Logo id="header-logo" src={fluxLogo} alt="our company logo"/>

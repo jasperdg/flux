@@ -17,7 +17,6 @@ export const getAuthStatusBegin = () => ({
 export const authStatusSuccess = allowed => ({
 	type: GET_AUTH_STATUS_SUCCESS,
 	payload: {
-
 		allowed
 	}
 });
@@ -36,44 +35,45 @@ export const authStatusFailure = err => ({
 	}
 });
 
-export const getAuthStatus = (walletAccount, accessToken) => {
-	return dispatch => {
+export const getAuthStatus = (walletAccount, accessToken, account) => {
+	return async dispatch => {
 		dispatch(getAuthStatusBegin());
-		if (walletAccount) {
-			const isSignedIn = walletAccount.isSignedIn();
-			const accountId = walletAccount.getAccountId();
-
-			dispatch(signedIn(isSignedIn));
-			if (isSignedIn) {
-				return fetch(`${API_URL}/auth_near_account`, {
-					method: "POST",
-					mode: 'cors',
-					cache: 'no-cache',
-					credentials: "include",
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({accountId}),
-				})
-				.then(res => res.json())
-				.then(json => {
-					const { success } = json;
-					if (success) dispatch(authStatusSuccess(success));
-					else dispatch(checkAccessToken(accessToken, accountId));
-					return success;
-				})
-				.catch(err => dispatch(authStatusFailure(err)));
-			} else {
-				dispatch(authStatusSuccess(false))
-				return
-			}
+		const isSignedIn = walletAccount.isSignedIn();
+		dispatch(signedIn(isSignedIn));
+		if (!account) return dispatch(authStatusSuccess(false));
+		
+		const accountId = walletAccount.getAccountId();
+		const signature = await signAuthMessage(accountId, account);
+		
+		if (isSignedIn) {
+			const res = await fetch(`${API_URL}/auth_near_account`, {
+				method: "POST",
+				mode: 'cors',
+				cache: 'no-cache',
+				credentials: "include",
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					signature: Buffer.from(signature.signature, "base64"),
+					pubKey: Buffer.from(signature.publicKey.data, "base64")
+				}),
+			})
+			const { success }  = await res.json();
+			if (success) dispatch(authStatusSuccess(success));
+			else dispatch(checkAccessToken(accessToken, accountId, account));
+			return success;
+		} else {
+			return dispatch(authStatusSuccess(false))
 		}
 	}
 }
 
-export const checkAccessToken = (accessToken, accountId) => {
-	return dispatch => {
+export const checkAccessToken = (accessToken, accountId, account) => {
+	return async dispatch => {
+		if (!account) return dispatch(authStatusSuccess(false));
 		if (!accessToken) return dispatch(invalidAccessToken());
+		const signature = await signAuthMessage(accountId, account);
 		fetch(`${API_URL}/auth_user`, {
 			method: "POST",
 			mode: 'cors',
@@ -82,7 +82,11 @@ export const checkAccessToken = (accessToken, accountId) => {
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({accessToken, accountId}),
+			body: JSON.stringify({
+				accessToken,
+				signature: Buffer.from(signature.signature, "base64"),
+				pubKey: Buffer.from(signature.publicKey.data, "base64")
+			}),
 		})
 		.then(res => res.json())
 		.then(json => {
@@ -96,6 +100,16 @@ export const checkAccessToken = (accessToken, accountId) => {
 		.catch(err => {
 			dispatch(authStatusFailure(err))
 		})
+		
 	}
 
+}
+
+const signAuthMessage = (accountId, account) => {
+	return new Promise(async (resolve, reject) => {
+		const signature	= await account.connection.signer.signMessage("auth", accountId, account.connection.networkId)
+		console.log(signature)
+		resolve(signature);
+	})
+	
 }

@@ -7,18 +7,26 @@ import DesktopSplash from '../DesktopSplash';
 import LoadingScreen from '../LoadingScreen';
 import { initialize } from '../../actions/nearActions';
 import NearLogin from './NearLogin';
-import { signIn } from '../../actions/accountActions';
+import { signIn, initializeAccount } from '../../actions/accountActions';
 import EnterAccessToken from './EnterAccessToken';
 
-function Authenticate({dispatch, invalidAccessToken, signedIn, walletAccount, success, loading, error,...props}) {
+
+function Authenticate({near, account, dispatch, invalidAccessToken, signedIn, walletAccount, success, loading, error,...props}) {
 	const [authenticated, setAuthenticated] = useState(false);
+	const [accountGot, setAccountGot] = useState(false);
 
 	useEffect(() => {
 		dispatch(initialize());
 	}, []);
 
-	if (!authenticated && walletAccount) {
-		dispatch(getAuthStatus(walletAccount, props.match.params.accessToken));
+	if (!accountGot && walletAccount) {
+		dispatch(initializeAccount(near, walletAccount));
+		setAccountGot(true);
+	}
+
+	if (!authenticated && account !== null) {
+		console.log(account)
+		dispatch(getAuthStatus(walletAccount, props.match.params.accessToken, account));
 		setAuthenticated(true)
 	}
 
@@ -26,13 +34,16 @@ function Authenticate({dispatch, invalidAccessToken, signedIn, walletAccount, su
 	if (!mobile) return <DesktopSplash />;
 	if (loading) return <LoadingScreen />;
 	if (signedIn === false) return <NearLogin login={() => signIn(walletAccount)}/>
-	if (invalidAccessToken) return <EnterAccessToken accountId={walletAccount.getAccountId()}/>
+	if (invalidAccessToken) return <EnterAccessToken account={account} accountId={walletAccount.getAccountId()}/>
 	if (success) return <App />;
-	else return <div>denied</div>
+	if (error) return <div>{error}</div>
+	else return <LoadingScreen />;
 }
 
 const mapStateToProps = state => ({
+	near: state.near.near,
 	walletAccount: state.near.walletAccount,
+	account: state.account.account,
 	success: state.auth.success,
 	loading: state.auth.loading,
 	error: state.auth.error,
