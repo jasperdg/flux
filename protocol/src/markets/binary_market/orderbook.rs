@@ -244,9 +244,7 @@ impl Orderbook {
 		}
 	}
 	
-	
-	
-	//TODO : WTF?
+	// Recursive function that searches for a specific target_price within the orderbook BST
 	pub fn get_order_by_price(&self, mut current_order: &Order, target_price: u64) -> Option<u64> {
 		if current_order.price == target_price {
 			return Some(current_order.id);

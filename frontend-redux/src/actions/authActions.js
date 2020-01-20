@@ -56,7 +56,8 @@ export const getAuthStatus = (walletAccount, accessToken, account) => {
 				},
 				body: JSON.stringify({
 					signature: Buffer.from(signature.signature, "base64"),
-					pubKey: Buffer.from(signature.publicKey.data, "base64")
+					pubKey: Buffer.from(signature.publicKey.data, "base64"),
+					accountId
 				}),
 			})
 			const { success }  = await res.json();
@@ -69,6 +70,7 @@ export const getAuthStatus = (walletAccount, accessToken, account) => {
 	}
 }
 
+// TODO: make sure message is only signed when this function is being called on itself
 export const checkAccessToken = (accessToken, accountId, account) => {
 	return async dispatch => {
 		if (!account) return dispatch(authStatusSuccess(false));
@@ -85,7 +87,8 @@ export const checkAccessToken = (accessToken, accountId, account) => {
 			body: JSON.stringify({
 				accessToken,
 				signature: Buffer.from(signature.signature, "base64"),
-				pubKey: Buffer.from(signature.publicKey.data, "base64")
+				pubKey: Buffer.from(signature.publicKey.data, "base64"),
+				accountId,
 			}),
 		})
 		.then(res => res.json())
