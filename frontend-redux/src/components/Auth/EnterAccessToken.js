@@ -11,6 +11,7 @@ const Logo = styled.img`
 	width: 35%;
 	margin: auto;
 	display: block;
+	max-width: 200px;
 	margin-top: 30vh;
 `;
 const SubmitButton = styled.button`

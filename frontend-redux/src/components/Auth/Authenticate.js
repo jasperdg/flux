@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import App from '../App';
 import { connect } from 'react-redux';
 import { getAuthStatus } from '../../actions/authActions';
-import isMobileDevice from '../../utils/isMobileDevice';
-import DesktopSplash from '../DesktopSplash';
 import LoadingScreen from '../LoadingScreen';
 import { initialize } from '../../actions/nearActions';
 import NearLogin from './NearLogin';
@@ -16,11 +14,11 @@ function Authenticate({near, account, dispatch, invalidAccessToken, signedIn, wa
 	const [accountGot, setAccountGot] = useState(false);
 
 	useEffect(() => {
-		dispatch(initialize());
+		// dispatch(initialize());
 	}, []);
 
 	if (!accountGot && walletAccount) {
-		dispatch(initializeAccount(near, walletAccount));
+		// dispatch(initializeAccount(near, walletAccount));
 		setAccountGot(true);
 	}
 
@@ -30,9 +28,7 @@ function Authenticate({near, account, dispatch, invalidAccessToken, signedIn, wa
 		setAuthenticated(true)
 	}
 
-	const mobile = isMobileDevice();
-	if (!mobile) return <DesktopSplash />;
-	if (loading) return <LoadingScreen />;
+	// if (loading) return <LoadingScreen />;
 	if (signedIn === false) return <NearLogin login={() => signIn(walletAccount)}/>
 	if (invalidAccessToken) return <EnterAccessToken account={account} accountId={walletAccount.getAccountId()}/>
 	if (success) return <App />;

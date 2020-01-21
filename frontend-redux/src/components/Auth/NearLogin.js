@@ -13,6 +13,7 @@ const NearLogo = styled.img`
 
 const Logo = styled.img`
 	width: 35%;
+	max-width: 200px;
 	margin: auto;
 	display: block;
 	margin-top: 30vh;

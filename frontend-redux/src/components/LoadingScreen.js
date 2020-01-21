@@ -18,6 +18,7 @@ const SplashScreenContainer = styled.div`
 
 const Logo = styled.img`
 	width: 40%;
+	max-width: 250px;
 	margin: auto;
 	display: block;
 	margin-top: 30vh;
