@@ -62,7 +62,7 @@ export const getAuthStatus = (walletAccount, accessToken, account) => {
 			})
 			const { success }  = await res.json();
 			if (success) dispatch(authStatusSuccess(success));
-			else dispatch(checkAccessToken(accessToken, accountId, account));
+			else dispatch(checkAccessToken(accessToken, accountId, signature));
 			return success;
 		} else {
 			return dispatch(authStatusSuccess(false))
@@ -71,11 +71,12 @@ export const getAuthStatus = (walletAccount, accessToken, account) => {
 }
 
 // TODO: make sure message is only signed when this function is being called on itself
-export const checkAccessToken = (accessToken, accountId, account) => {
+export const checkAccessToken = (accessToken, accountId, signedMessage, account) => {
 	return async dispatch => {
-		if (!account) return dispatch(authStatusSuccess(false));
+		if (!account || !signedMessage) return dispatch(authStatusSuccess(false));
 		if (!accessToken) return dispatch(invalidAccessToken());
-		const signature = await signAuthMessage(accountId, account);
+		let signature = !!signedMessage ? signedMessage : await signAuthMessage(accountId, account);
+
 		fetch(`${API_URL}/auth_user`, {
 			method: "POST",
 			mode: 'cors',
@@ -111,7 +112,6 @@ export const checkAccessToken = (accessToken, accountId, account) => {
 const signAuthMessage = (accountId, account) => {
 	return new Promise(async (resolve, reject) => {
 		const signature	= await account.connection.signer.signMessage("auth", accountId, account.connection.networkId)
-		console.log(signature)
 		resolve(signature);
 	})
 	

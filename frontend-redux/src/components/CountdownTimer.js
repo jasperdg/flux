@@ -4,7 +4,7 @@ import styled from 'styled-components';
 const Timer = styled.span`
   position: absolute;
   top: 10px;
-  right: 15px;
+  right: 5%;
   color: #310094;
 `;
 

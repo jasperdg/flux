@@ -30,6 +30,11 @@ const SubmitButton = styled.button`
 	width: 80%;
 	left: 10%;
 	bottom: 40px;
+
+	@media (min-width: 560px) {
+		width: 250px;
+		left: calc(50% - 125px);
+	}
 `
 const Title = styled.h2`
 	text-align: center;
@@ -45,6 +50,10 @@ const Input = styled.input`
 	padding: 15px;
 	border: none;
 
+	@media (min-width: 560px) {
+		width: 250px;
+		left: calc(50% - 140px);
+	}
 `
 
 const LoginContainer = styled.div`
@@ -80,7 +89,7 @@ function EnterAccessToken({dispatch, accountId, account}) {
 
 	const formSubmit = () => {
 		if (dataType === "token") {
-			dispatch(checkAccessToken(inputValue, accountId, account))
+			dispatch(checkAccessToken(inputValue, accountId, null,  account))
 		} else {
 			if (isValidEmail(inputValue)) {
 				recaptcha.execute()

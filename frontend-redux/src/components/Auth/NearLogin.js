@@ -34,6 +34,14 @@ const LoginButton = styled.button`
 	width: 80%;
 	left: 10%;
 	bottom: 25px;
+
+	@media (min-width: 560px) {
+		width: 250px;
+		left: calc(50% - 125px);
+	}
+	max-width: 250px;
+
+	margin: auto;
 `
 const Title = styled.h2`
 	text-align: center;

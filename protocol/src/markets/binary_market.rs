@@ -20,7 +20,8 @@ pub struct BinaryMarket {
 	pub oracle_address: String,
 	pub payout_multipliers: Option<Vec<u64>>,
 	pub invalid: Option<bool>,
-	pub resoluted: bool
+	pub resoluted: bool,
+	pub liquidity: u64
 }
 
 impl BinaryMarket {
@@ -35,7 +36,8 @@ impl BinaryMarket {
 			oracle_address: env::current_account_id(),
 			payout_multipliers: None,
 			invalid: None,
-			resoluted: false
+			resoluted: false,
+			liquidity: 0
 		}
 	}
 
@@ -65,6 +67,7 @@ impl BinaryMarket {
 			total_shares_filled = shares - inverse_orderbook.fill_matching_orders(shares, price_per_share);
 		}
 
+		self.liquidity = self.liquidity + spend;
 		self.add_order(from, outcome, shares, price_per_share, total_shares_filled);
 		return true;
 	}

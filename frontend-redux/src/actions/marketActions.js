@@ -12,16 +12,19 @@ export const placedOrder = result => ({
 	}
 })
 
-export const startOrderPlace = () => ({
+export const startOrderPlace = (marketId) => ({
 	type: START_ORDER_PLACE,
+	payload: {
+		marketId,
+	}
 });
 
 
 export const placeOrder = (account, marketId, outcome, order, updateMarket, getAndUpdateUserOrders, updateUserBalance) => {
 	return dispatch => {
 		const spend = parseInt(dollarsToDai(order.spend));
-		console.log(spend);
-		dispatch(startOrderPlace());
+		console.log(marketId)
+		dispatch(startOrderPlace(marketId));
 		try {
 			account.functionCall(
 				window.nearConfig.contractName, 
@@ -51,7 +54,7 @@ export const placeOrder = (account, marketId, outcome, order, updateMarket, getA
 
 export const claimEarnings = (account, marketId, updateUserBalance) => {
 	return dispatch => {
-		dispatch(startOrderPlace());
+		dispatch(startOrderPlace(marketId));
 		account.functionCall(
 			window.nearConfig.contractName, 
 			"claim_earnings", 

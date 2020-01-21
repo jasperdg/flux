@@ -84,6 +84,8 @@ impl Orderbook {
 		return order.to_owned();
 	}
 
+	// TODO: Refactor? - could probably be split up
+	// TODO: Rename 
 	pub fn remove(&mut self, order_id: u64) -> &bool {
 		let order = self.open_orders.get(&order_id).unwrap().to_owned();
 		self.open_orders.remove(&order_id);
@@ -144,6 +146,8 @@ impl Orderbook {
 		return &true;
 	}
 
+	// Rename - be more specific
+	// Check for refactor
 	pub fn fill_matching_orders(&mut self, amount_of_shares: u64, price: u64) -> u64 {
 		let root_optional = self.root.as_ref();
 		if amount_of_shares == 0 || root_optional.is_none() { return amount_of_shares }
@@ -187,6 +191,7 @@ impl Orderbook {
 		}
 	}
 
+	// TODO: refactor?
 	pub fn get_and_delete_earnings(&mut self, from: String, invalid: bool) -> (u64, u64) {
 
 		let (value_in_open_orders, earnings, open_orders_to_delete, filled_orders_to_delete) = self.get_earnings(from, true, invalid);
@@ -201,6 +206,8 @@ impl Orderbook {
 		return (value_in_open_orders, earnings);
 	}
 
+	// TODO: rename
+	// refactor
 	pub fn get_earnings(&self, from: String, and_delete: bool, invalid: bool) ->  (u64, u64, Vec<u64>, Vec<u64>) {
 		let mut earnings = 0;
 		let mut value_in_open_orders = 0;
@@ -232,6 +239,7 @@ impl Orderbook {
 		return (value_in_open_orders, earnings, open_orders_to_delete, filled_orders_to_delete);
 	}
 
+	// TODO: Rename 
 	pub fn remove_orders(&mut self, orders: Vec<u64>) {
 		for order_id in orders {
 			self.remove(order_id);
@@ -262,7 +270,7 @@ impl Orderbook {
 		return None;
 	}
 
-
+	// ??
 	pub fn descend_tree_for_parent(&mut self, price: u64) -> u64 {
 		let root = self.root.as_ref().unwrap();
 		let mut current_order_id = root.id;
@@ -275,6 +283,7 @@ impl Orderbook {
 		return current_order_id;
 	}
 
+	// TODO: Rename
 	pub fn to_order_id(&mut self) -> u64 {
 		self.nonce += 1;
 		return self.nonce;

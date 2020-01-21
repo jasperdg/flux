@@ -9,6 +9,9 @@ const Logo = styled.img`
 	width: 15%;
 	display: inline-block;
 	align-self: center;
+	@media (min-width: 560px) {
+		max-width: 55px;	
+	}
 `
 
 const HeaderContainer = styled.header`
@@ -16,7 +19,11 @@ const HeaderContainer = styled.header`
 	justify-content: space-between;
 	vertical-align: middle;
 	align-items: center;
-	padding: 3% 5% ;
+	padding: 3% 5%;
+	width: 90%;
+	@media (min-width: 560px) {
+		padding: 1% 5%;
+	}
 `
 
 const LoginButton = styled.button`
@@ -41,7 +48,7 @@ const AccountInfo = styled.span`
 	text-align: center;
 `
 
-function Header({near, daiBalance, walletAccount, account, accountId, accountState, isSignedIn, dispatch}) {
+function Header({allowance, daiBalance, walletAccount, accountId, isSignedIn}) {
 	return (
 		<HeaderContainer>
 		  <Logo id="header-logo" src={fluxLogo} alt="our company logo"/>
@@ -52,7 +59,7 @@ function Header({near, daiBalance, walletAccount, account, accountId, accountSta
 				: (
 					<>
 						<AccountInfoContainer>
-							<AccountInfo> {accountId}</AccountInfo>
+							<AccountInfo> {accountId} </AccountInfo>
 							<AccountInfo> {daiBalance ? `$${daiToDollars(daiBalance)}` : null}</AccountInfo>
 						</AccountInfoContainer>
 						<LoginButton onClick={() => signOut(walletAccount)}>Logout</LoginButton>
@@ -70,6 +77,7 @@ const mapStateToProps = (state) => ({
 	walletAccount: state.near.walletAccount,
 	account: state.account.account,
 	accountId: state.account.accountId,
+	allowance: state.account.allowance,
 	accountState: state.account.accountState,
 	isSignedIn: state.account.isSignedIn
 });

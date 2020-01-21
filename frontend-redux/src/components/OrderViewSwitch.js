@@ -22,7 +22,7 @@ const SwitchButton = styled.div`
 
 
 function OrderViewSwitch({toggle, activeView}) {
-	const text = ["FILLED", "OPEN"];
+	const text = ["OPEN", "FILLED"];
 
 	const buttons = text.map((text, i) => {
 		const ColloredSwitchButton = styled(SwitchButton)`

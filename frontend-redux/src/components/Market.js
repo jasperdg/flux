@@ -8,11 +8,13 @@ import MarketInput from './MarketInput';
 import MarketButton from './MarketButton';
 import styled from 'styled-components';
 import { BLUE, PINK } from '../constants';
-import { fromPayoutDistribution, yoctoToNear, allowanceToColor, daiToDollars } from '../utils/unitConvertion';
+import { fromPayoutDistribution, daiToDollars } from '../utils/unitConvertion';
 import { capitalize } from '../utils/stringManipulation';
 import { connect } from 'react-redux';
 import { placeOrder, claimEarnings } from '../actions/marketActions';
 import { updateBalance } from '../actions/nearActions.js';
+import AllowanceIndicator from './AllowanceIndicator.js';
+import Loader from './Loader.js';
 
 const MarketContainer = styled.div`
   width: 90%;
@@ -27,7 +29,12 @@ const MarketContainer = styled.div`
   -moz-box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
   box-shadow: 0 2px 4px 0 rgb(171, 190, 200);
   margin-left: 5%;
-  overflow: scroll;
+
+	@media (min-width: 560px) {
+		overflow: auto;
+		margin-bottom: 25px; 
+	}
+
 `;
 
 const ButtonSection = styled.div`
@@ -44,19 +51,7 @@ const Description = styled.h1`
 	display: block;
 	margin: 0 auto;
 `
-const Allowance = styled.div`
-  position: absolute;
-  margin-top: 10px;
-`;
 
-const AllowanceIndicator = styled.div`
-	border-radius: 50%;
-	width: 15px;
-	height: 15px;
-	display: inline-block;
-	vertical-align: middle;
-	margin-left: 5px;
-`;
 
 const ResolutedSection = styled.div`
 	display: block;
@@ -91,11 +86,9 @@ const ClaimButton = styled.button`
 `;
 
 // TODO: This could be compartmentalized a lot more.
-// TODO: color buttons differently depending on market outcome
 // TODO: If place order fails the loader Doesn't stop - should return error
-function Market({market, accountData, dispatch, contract}) {
+function Market({market, marketLoading, accountData, dispatch, contract}) {
 	let lastElement;
-
 	const [updatedMarket, setUpdatedMarket] = useState(market);
 	const [orderType, setOrderType] = useState("market")
 	const [spend, setSpend] = useState(0);
@@ -184,13 +177,13 @@ function Market({market, accountData, dispatch, contract}) {
 		spend,
 		odds
 	}
-	const ColoredAllowanceIndicator = styled(AllowanceIndicator)`
-		background-color: ${allowanceToColor(accountData.allowance)};
-	`;
+
+	console.log(marketLoading, market.id)
 
 	return (
 		<MarketContainer onClick={ifLastElemIsInputBlur}>
-			<Allowance >{`allowance:`} <ColoredAllowanceIndicator/> </Allowance>
+			{marketLoading === market.id && <Loader />}
+			<AllowanceIndicator allowance={accountData.allowance}/>
 			<Description>{ capitalize(market.description) }?</Description>
 			{
 				!market.resoluted ? 
@@ -219,6 +212,7 @@ function Market({market, accountData, dispatch, contract}) {
 						date={market.end_time}
 						renderer={CountdownTimer}
 					/>
+
 
 					<OrderOverview marketId={market.id} userOrders={userOrders}/>
 
@@ -273,6 +267,7 @@ const mapStateToProps = (state) => ({
 	orderType: state.market.orderType,
 	contract: state.near.contract,
 	txLoading: state.market.loading,
+	marketLoading: state.market.marketLoading,
 	contract: state.near.contract
 })
 

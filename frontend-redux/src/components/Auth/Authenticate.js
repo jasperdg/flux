@@ -14,21 +14,20 @@ function Authenticate({near, account, dispatch, invalidAccessToken, signedIn, wa
 	const [accountGot, setAccountGot] = useState(false);
 
 	useEffect(() => {
-		// dispatch(initialize());
+		dispatch(initialize());
 	}, []);
 
 	if (!accountGot && walletAccount) {
-		// dispatch(initializeAccount(near, walletAccount));
+		dispatch(initializeAccount(near, walletAccount));
 		setAccountGot(true);
 	}
 
 	if (!authenticated && account !== null) {
-		console.log(account)
 		dispatch(getAuthStatus(walletAccount, props.match.params.accessToken, account));
 		setAuthenticated(true)
 	}
 
-	// if (loading) return <LoadingScreen />;
+	if (loading) return <LoadingScreen />;
 	if (signedIn === false) return <NearLogin login={() => signIn(walletAccount)}/>
 	if (invalidAccessToken) return <EnterAccessToken account={account} accountId={walletAccount.getAccountId()}/>
 	if (success) return <App />;

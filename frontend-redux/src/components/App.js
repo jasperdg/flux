@@ -29,7 +29,6 @@ function App({contract, dispatch, loading, owner, accountId}) {
         <LoadingScreen />
         :
         <>
-          <Loader/>
           {(owner && accountId) && owner === accountId && <OwnerPortal/> }
           <Header />
           <Markets />

@@ -7,6 +7,7 @@ const Blackground = styled.div`
 	height: 100vh;
 	top: 0;
 	left: 0;
+	overflow: hidden;
 	background-color: rgba(0, 0, 0, 0.3);
 	z-index: 101;
 `

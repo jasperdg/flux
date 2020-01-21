@@ -5,10 +5,10 @@ import Orderbook from './Orderbook';
 
 //TODO: Text in constants
 function OrderOverview({userOrders}) {
-	const [orderView, setOrderView] = useState("FILLED");
+	const [orderView, setOrderView] = useState("OPEN");
 
 	const toggleOrderView = () => {
-		const newState = orderView === "FILLED" ? "OPEN" : "FILLED";
+		const newState = orderView === "OPEN" ? "FILLED" : "OPEN";
 		setOrderView(newState)
 	}
 

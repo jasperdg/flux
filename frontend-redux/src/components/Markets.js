@@ -5,6 +5,19 @@ import styled from 'styled-components';
 import { connect } from 'react-redux';
 import Market from './Market';
 import Spinner from './Spinner';
+import isMobileDevice from '../utils/isMobileDevice';
+
+const Carousel = styled(CarouselProvider)`
+
+`;
+
+const StyledSlider = styled(Slider)`
+
+`;
+
+const StyledSlide = styled(Slide)`
+
+`;
 
 const MarketsContainer = styled.div`
   width: 100%;
@@ -75,6 +88,7 @@ const Markets = ({markets, loading}) => {
 	let [containerWidth, setContainerWidth] = useState(0)
 	let [containerHeight, setContainerHeight] = useState(0)
 	const marketsContainer = createRef();
+	const mobile = isMobileDevice(); 
 
 	useEffect(() => {
 		let unmounted = false;
@@ -87,25 +101,26 @@ const Markets = ({markets, loading}) => {
 
 	return (
 		<MarketsContainer ref={marketsContainer} id="markets-container">
-
+				
 			{
 				loading ? 
 				<StyledSpinner /> 
 				:
-				<CarouselProvider
+				mobile ? 
+				<Carousel
 				naturalSlideWidth={containerWidth}
 				naturalSlideHeight={containerHeight}
 				totalSlides={markets.length}
 				>
-					<Slider>
+					<StyledSlider>
 						{
 							markets.map((market, i) => (
-								<Slide key={i} index={i}>
+								<StyledSlide key={i} index={i}>
 									<Market market={market} key={i}/>
-								</Slide>
+								</StyledSlide>
 							))
 						}
-					</Slider>
+					</StyledSlider>
 					
 
 					<DotsContainer>
@@ -123,7 +138,11 @@ const Markets = ({markets, loading}) => {
 						}
 					</DotsContainer>
 					
-				</CarouselProvider>
+				</Carousel>
+				:
+				markets.map((market, i) => (
+					<Market market={market} key={i}/>
+				))
 			}
 		</MarketsContainer>
 	);

@@ -22,8 +22,13 @@ const CollumnTitle = styled.div`
 `;
 
 const Body = styled.div`
-	max-height: 150px;
+	max-height: 100px;
 	overflow: scroll;
+
+	@media (min-width: 560px) {
+		overflow: auto;
+	}
+	
 `;
 const Row = styled.div`
 	display: flex;
