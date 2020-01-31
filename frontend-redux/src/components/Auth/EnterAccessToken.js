@@ -14,6 +14,7 @@ const Logo = styled.img`
 	max-width: 200px;
 	margin-top: 30vh;
 `;
+
 const SubmitButton = styled.button`
 	background-color: ${PINK};
 	color: white;
@@ -35,7 +36,8 @@ const SubmitButton = styled.button`
 		width: 250px;
 		left: calc(50% - 125px);
 	}
-`
+`;
+
 const Title = styled.h2`
 	text-align: center;
 	color: #310094;

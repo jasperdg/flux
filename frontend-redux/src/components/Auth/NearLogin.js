@@ -39,7 +39,6 @@ const LoginButton = styled.button`
 		width: 250px;
 		left: calc(50% - 125px);
 	}
-	max-width: 250px;
 
 	margin: auto;
 `

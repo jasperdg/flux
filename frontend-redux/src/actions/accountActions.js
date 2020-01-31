@@ -35,12 +35,11 @@ export const initializeAccount = (near, walletAccount) => {
 			accountId,
 			isSignedIn,
 		));
-
 		let account, accountState, allowance = null;
 		if (isSignedIn) {
 			account = await near.account(accountId); 
 			accountState = await account.state();
-			allowance = account._accessKey.permission.FunctionCall.allowance;
+			allowance = account._state.amount;
 		}
 
 		dispatch(initializedAccount (
