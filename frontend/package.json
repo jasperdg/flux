@@ -1,0 +1,48 @@
+{
+  "name": "frontend",
+  "version": "0.2.7",
+  "private": true,
+  "dependencies": {
+    "@material/react-text-field": "^0.15.0",
+    "babel-loader": "^8.0.6",
+    "bn.js": "^5.0.0",
+    "nearlib": "^0.13.2",
+    "pure-react-carousel": "^1.22.0",
+    "react": "^16.9.0",
+    "react-countdown-now": "^2.1.1",
+    "react-datetime-picker": "^2.7.1",
+    "react-dom": "^16.9.0",
+    "react-google-invisible-recaptcha": "^0.2.11",
+    "react-player": "^1.13.0",
+    "react-router-dom": "^5.0.1",
+    "react-scripts": "3.1.1",
+    "react-switch": "^5.0.1",
+    "styled-components": "^4.4.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "index.js",
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC"
+}
