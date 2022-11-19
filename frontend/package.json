@@ -15,7 +15,7 @@
     "react-google-invisible-recaptcha": "^0.2.11",
     "react-player": "^1.13.0",
     "react-router-dom": "^5.0.1",
-    "react-scripts": "3.1.1",
+    "react-scripts": "5.0.1",
     "react-switch": "^5.0.1",
     "styled-components": "^4.4.0"
   },
